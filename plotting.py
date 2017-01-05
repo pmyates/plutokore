@@ -1,8 +1,8 @@
-import jet as jet
-import nfw as NFW
-import simulations as ps
-import matplotlib.gridspec as gridspec
-from mpl_toolkits.axes_grid1 import make_axes_locatable
+import astropy.units as _u
+import environments.makino as _NFW
+import simulations as _ps
+import matplotlib.gridspec as _gridspec
+from mpl_toolkits.axes_grid1 import make_axes_locatable as _make_axes_locatable
 
 def get_pluto_data_direct(data_object, variable, log, simulation_directory, timestep):
     variable_data = getattr(data_object, variable).T
@@ -14,7 +14,7 @@ def get_pluto_data_direct_no_log(data_object, variable, log, simulation_director
     return get_pluto_data_direct(data_object, variable, False, simulation_directory, timestep)
     
 
-def get_animation(simulation_directory, timesteps, time_scaling, length_scaling, variable, figure_properties,
+def get_animation(simulation_directory, timeste_ps, time_scaling, length_scaling, variable, figure_properties,
                   log=True, vmax=None, vmin=None, vmax2=None, vmin2=None, timebar_fontsize = 'large',
                   cbar_size='5%',
                   load_data_function = get_pluto_data_direct,
@@ -31,17 +31,17 @@ def get_animation(simulation_directory, timesteps, time_scaling, length_scaling,
     def load_data(pluto_data, t=-1):
         v_data = []
         if len(variable) is 2:
-            v_data.append(load_data_function(pluto_data, variable[0], log, simulation_directory, timesteps[t]))
+            v_data.append(load_data_function(pluto_data, variable[0], log, simulation_directory, timeste_ps[t]))
             
             sim_d2 = simulation_directory2
             if simulation_directory2 is None:
                 sim_d2 = simulation_directory
             if load_data_function2 is not None:
-                v_data.append(load_data_function2(pluto_data, variable[1], log, sim_d2, timesteps[t]))
+                v_data.append(load_data_function2(pluto_data, variable[1], log, sim_d2, timeste_ps[t]))
             else:
-                v_data.append(load_data_function(pluto_data, variable[1], log, sim_d2, timesteps[t]))
+                v_data.append(load_data_function(pluto_data, variable[1], log, sim_d2, timeste_ps[t]))
         else:
-            v_data = load_data_function(pluto_data, variable, log, simulation_directory, timesteps[t])
+            v_data = load_data_function(pluto_data, variable, log, simulation_directory, timeste_ps[t])
         return v_data
     
     # plot data function
@@ -103,10 +103,10 @@ def get_animation(simulation_directory, timesteps, time_scaling, length_scaling,
     multiple_var = len(variable) is 2
     
     # load the last data step we've been given
-    last_data = ps.load_timestep_data(timesteps[-1], simulation_directory)
+    last_data = _ps.load_timestep_data(timeste_ps[-1], simulation_directory)
     
     if multiple_var is True:
-        last_data2 = ps.load_timestep_data(timesteps[-1], simulation_directory2)
+        last_data2 = _ps.load_timestep_data(timeste_ps[-1], simulation_directory2)
     
     # load the last variables
     v_last = load_data(last_data)
@@ -132,12 +132,12 @@ def get_animation(simulation_directory, timesteps, time_scaling, length_scaling,
         
 
     # get cartesian coordinates
-    X1, X2 = ps.sphericaltocartesian(last_data)
+    X1, X2 = _ps.sphericaltocartesian(last_data)
     X1 = X1 * length_scaling.value
     X2 = X2 * length_scaling.value
     
     if length_scaling2 is not None:
-        X1_2, X2_2 = ps.sphericaltocartesian(last_data2)
+        X1_2, X2_2 = _ps.sphericaltocartesian(last_data2)
         X1_2 = X1_2 * length_scaling2.value
         X2_2 = X2_2 * length_scaling2.value
 
@@ -148,7 +148,7 @@ def get_animation(simulation_directory, timesteps, time_scaling, length_scaling,
     ax = plt.axes(xlim=figure_properties.xlim, ylim=figure_properties.ylim);
     
     # load inital data
-    initial_data = ps.load_timestep_data(timesteps[0], simulation_directory)
+    initial_data = _ps.load_timestep_data(timeste_ps[0], simulation_directory)
     
     initial_variable_data = load_data(initial_data)
     
@@ -188,11 +188,11 @@ def get_animation(simulation_directory, timesteps, time_scaling, length_scaling,
 
     #animation function
     def animate(i):
-        if i >= len(timesteps):
-            i = len(timesteps) - 1
+        if i >= len(timeste_ps):
+            i = len(timeste_ps) - 1
 
         # load timestep data file
-        d = ps.load_timestep_data(timesteps[i], simulation_directory)
+        d = _ps.load_timestep_data(timeste_ps[i], simulation_directory)
         
         # get variable data
         var_data = load_data(d, i)
@@ -227,7 +227,7 @@ def get_animation(simulation_directory, timesteps, time_scaling, length_scaling,
         clear_output(wait=True)
         
         # print progress bar
-        print 'Processed {0}/{1}'.format(i,len(timesteps))
+        print 'Processed {0}/{1}'.format(i,len(timeste_ps))
         
         # flush progress string
         sys.stdout.flush()
@@ -235,33 +235,33 @@ def get_animation(simulation_directory, timesteps, time_scaling, length_scaling,
         return ims
 
     return animation.FuncAnimation(f1, animate, init_func=init,
-                                  frames=len(timesteps), blit=False)
+                                  frames=len(timeste_ps), blit=False)
 
-def plot_energy(simulation_directory, timesteps, sim_times, j, run_code, ax = None, fig = None,
-                plot_theoretical = True, plot_flux = True, width=10, height=10, energy_scaling = 1 * u.J,
+def plot_energy(simulation_directory, timeste_ps, sim_times, j, run_code, ax = None, fig = None,
+                plot_theoretical = True, plot_flux = True, width=10, height=10, energy_scaling = 1 * _u.J,
                 draw_legend=True, draw_title=True):
     # get figure
     if ax is None or fig is None:
         fig = plt.figure(figsize=(width,height))
         ax = plt.axes()
     
-    initial_data = ps.load_timestep_data(0, simulation_directory)
-    E_sum, KE_sum, UE_sum, UTh_sum, flux_sum = ps.calculate_total_run_energy(simulation_directory, timesteps,
+    initial_data = _ps.load_timestep_data(0, simulation_directory)
+    E_sum, KE_sum, UE_sum, UTh_sum, flux_sum = _ps.calculate_total_run_energy(simulation_directory, timeste_ps,
                                                                              np.rad2deg(j.theta), correct_numerical_errors=False)
-    theoretical_energy = ps.calculate_theoretical_energy(initial_data, np.rad2deg(j.theta), j, sim_times)
+    theoretical_energy = _ps.calculate_theoretical_energy(initial_data, np.rad2deg(j.theta), j, sim_times)
 
-    scaled_timesteps = sim_times * j.time_scaling
-    ax.plot(scaled_timesteps, (UTh_sum - UTh_sum[0]) * energy_scaling.value, label='Thermal Energy')
-    ax.plot(scaled_timesteps, (UE_sum - UE_sum[0]) * energy_scaling.value, label='Potential Energy')
-    ax.plot(scaled_timesteps, KE_sum * energy_scaling.value, label='Kinetic Energy')
-    ax.plot(scaled_timesteps, (E_sum - E_sum[0]) * energy_scaling.value, '.', label='Total Energy')
+    scaled_timeste_ps = sim_times * j.time_scaling
+    ax.plot(scaled_timeste_ps, (UTh_sum - UTh_sum[0]) * energy_scaling.value, label='Thermal Energy')
+    ax.plot(scaled_timeste_ps, (UE_sum - UE_sum[0]) * energy_scaling.value, label='Potential Energy')
+    ax.plot(scaled_timeste_ps, KE_sum * energy_scaling.value, label='Kinetic Energy')
+    ax.plot(scaled_timeste_ps, (E_sum - E_sum[0]) * energy_scaling.value, '.', label='Total Energy')
     
     if plot_theoretical is True:
-        ax.plot(scaled_timesteps, theoretical_energy, '.', label='Expected Energy')
+        ax.plot(scaled_timeste_ps, theoretical_energy, '.', label='Expected Energy')
 
     # Plot the flux
     if plot_flux is True:
-        ax.plot(timesteps, flux_sum * np.asarray(sim_times), '-.', label='Energy flux accross boundary')
+        ax.plot(timeste_ps, flux_sum * np.asarray(sim_times), '-.', label='Energy flux accross boundary')
     
     # label everything
     if draw_title is True:
@@ -278,35 +278,35 @@ def plot_energy(simulation_directory, timesteps, sim_times, j, run_code, ax = No
     # print('Run {0} measured energy error: {1}'.format(run_code, ((E_sum[-1] - E_sum[0]) - (theoretical_energy[-1]))/(theoretical_energy[-1])))
 
 
-import matplotlib.gridspec as gridspec
-from mpl_toolkits.axes_grid1 import make_axes_locatable
+import matplotlib.gridspec as _gridspec
+from mpl_toolkits.axes_grid1 import make_axes_locatable as _make_axes_locatable
 
-from collections import namedtuple
+from collections import namedtuple as _namedtuple
 
-FigureProperties = namedtuple('FigureProperties', ['width', 'height', 
+FigureProperties = _namedtuple('FigureProperties', ['width', 'height', 
                               'suptitle', 'aspect', 'xlim', 'ylim', 'xlabel',
                               'ylabel', 'cbar_label', 'cbar_padding', 'timebar_padding', 'vmin', 'vmax'])
 
-def plot_multiple_timesteps(simulation_dir, times, ts, ls, var, figure_properties, ncol = 5, log = True, colorbar=True, vs=1):
+def plot_multiple_timeste_ps(simulation_dir, times, ts, ls, var, figure_properties, ncol = 5, log = True, colorbar=True, vs=1):
     
     # calculate number of rows from max number of columns
     nrow = int(np.ceil(len(times) / float(ncol)))
     
     # create the figure
-    gs = gridspec.GridSpec(nrow, ncol)
+    gs = _gridspec.GridSpec(nrow, ncol)
     
     fig = plt.figure(figsize=(figure_properties.width, figure_properties.height))
     fig.suptitle(figure_properties.suptitle)
     
     # load the coordinate data
-    coord_data = ps.load_timestep_data(times[0], simulation_dir)
-    X1, X2 = ps.sphericaltocartesian(coord_data)
+    coord_data = _ps.load_timestep_data(times[0], simulation_dir)
+    X1, X2 = _ps.sphericaltocartesian(coord_data)
     
     # plot the times
     for i in range(len(times)):
         
         # load the simulation data
-        d = ps.load_timestep_data(times[i], simulation_dir)
+        d = _ps.load_timestep_data(times[i], simulation_dir)
         
         # setup axes
         ax = plt.subplot(gs[i / ncol, i % ncol])

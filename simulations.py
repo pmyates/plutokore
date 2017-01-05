@@ -1,8 +1,7 @@
-import jet as jet
-import nfw as NFW
-from scipy import special as sp
-from astropy.cosmology import Planck15 as cosmo
-from astropy.convolution import convolve, Box2DKernel
+import jet as _jet
+import environments.makino as _NFW
+from astropy.convolution import convolve as _convolve
+from astropy.convolution import Box2DKernel as _Box2DKernel
 
 def LoadSimulationData(ids, directory, suppress_output = None):
     data = []
@@ -143,8 +142,8 @@ def clamp_tracers(simulation_data, ntracers,
                   tracer_threshold = 1e-7,
                   tracer_effective_zero = 1e-20):
     # smooth the tracer data with a 2d box kernel of width 3
-    box2d = Box2DKernel(3)
-    radio_combined_tracers = convolve(combine_tracers(simulation_data, ntracers), box2d, boundary='extend')
+    box2d = _Box2DKernel(3)
+    radio_combined_tracers = _convolve(combine_tracers(simulation_data, ntracers), box2d, boundary='extend')
     radio_tracer_mask = np.where(radio_combined_tracers > tracer_threshold, 1.0, tracer_effective_zero)
 
     # create new tracer array that is clamped to tracer values
@@ -300,7 +299,7 @@ def calculate_actual_jet_opening_angle(run_data, theta_deg):
 
 def calculate_theoretical_energy(run_data, theta_deg, run_jet, run_times):
     indicies, actual_angle = calculate_actual_jet_opening_angle(run_data, theta_deg)
-    new_run_jet = jet.Jet(actual_angle, run_jet.M_x, run_jet.c_x, run_jet.rho_0, run_jet.Q, run_jet.gamma)
+    new_run_jet = _jet.AstroJet(actual_angle, run_jet.M_x, run_jet.c_x, run_jet.rho_0, run_jet.Q, run_jet.gamma)
     new_run_jet.calculate_length_scales()
     
     theoretical_energy = (((run_jet.M_x ** 3)*(new_run_jet.Omega*((run_jet.L_1b/run_jet.L_1)**2)/2.0)) 

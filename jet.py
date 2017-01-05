@@ -1,9 +1,8 @@
-import numpy as np
-import astropy.units as u
-import astropy.constants as const
-from tabulate import tabulate
+import numpy as _np
+import astropy.units as _u
+from tabulate import tabulate as _tabulate
 
-class Jet:
+class AstroJet:
     """Basic class for calculating relevant astrophyiscal jet quantities, as shown in Krause+ (2012) and Alexander (2006)"""
     
     def __init__(self, opening_angle, ext_mach_number, ext_sound_speed, ext_density, jet_power, gamma):
@@ -19,7 +18,7 @@ class Jet:
         gamma -- gamma
         """
         
-        self.theta = np.deg2rad(opening_angle)
+        self.theta = _np.deg2rad(opening_angle)
         self.M_x = ext_mach_number
         self.c_x = ext_sound_speed
         self.rho_0 = ext_density
@@ -42,25 +41,25 @@ class Jet:
         
     # (semi)private methods
     def calculate_L_1(self):
-        return 2*np.sqrt(2)*np.sqrt(self.Q/(self.rho_0 * (self.v_jet ** 3))).to(u.kpc)
+        return 2*_np.sqrt(2)*_np.sqrt(self.Q/(self.rho_0 * (self.v_jet ** 3))).to(_u.kpc)
     def calculate_L_2(self):
-        return np.sqrt(self.Q/(self.rho_0 * (self.c_x ** 3))).to(u.kpc)
+        return _np.sqrt(self.Q/(self.rho_0 * (self.c_x ** 3))).to(_u.kpc)
     def get_omega(self):
-        return 2.0 * np.pi * (1-np.cos(self.theta)) 
+        return 2.0 * _np.pi * (1-_np.cos(self.theta)) 
     def get_L_1_b(self):
-        return np.sqrt(1.0/(4.0 * (self.Omega))) * self.L_1 
+        return _np.sqrt(1.0/(4.0 * (self.Omega))) * self.L_1 
     def get_L_1_a(self):
-        return np.sqrt((self.gamma / (4 * self.Omega)) * (self.M_x ** 2) * (np.sin(self.theta) ** 2)) * self.L_1 
+        return _np.sqrt((self.gamma / (4 * self.Omega)) * (self.M_x ** 2) * (_np.sin(self.theta) ** 2)) * self.L_1 
     def get_L_1_c(self):
-        return np.sqrt((self.gamma / (4 * self.Omega)) * (self.M_x ** 2)) * self.L_1
+        return _np.sqrt((self.gamma / (4 * self.Omega)) * (self.M_x ** 2)) * self.L_1
     def get_v_jet(self):
         return self.M_x * self.c_x
     
     def calculate_Q():
-        return ((1.0/8.0) * self.M_x ** 3 * self.L_1 ** 2 * self.rho_0 * self.c_x ** 3).to(u.W)
+        return ((1.0/8.0) * self.M_x ** 3 * self.L_1 ** 2 * self.rho_0 * self.c_x ** 3).to(_u.W)
     
     def get_calculated_parameter_table(self):
         jet_calculated_data = [[r'$\Omega$', self.omega], [r'$v_{jet}$', self.v_jet], [r'$L_1$', self.L_1], [r'$L_2$', self.L_2],
                                [r'$L_{1a}$', self.L_1a], [r'$L_{1b}$', self.L_1b], [r'$L_{1c}$', self.L_1c]]
         jet_calculated_headings = ['Calculated Jet Parameter', 'Value']
-        return tabulate(jet_calculated_data, headers=jet_calculated_headings, tablefmt='pipe')
+        return _tabulate(jet_calculated_data, headers=jet_calculated_headings, tablefmt='pipe')

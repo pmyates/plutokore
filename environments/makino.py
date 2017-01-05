@@ -1,9 +1,8 @@
-import numpy as np
-import astropy.units as u
-import astropy.constants as const
-import astropy.cosmology as cosmology
-import scipy.integrate as integrate
-from tabulate import tabulate
+import numpy as _np
+import astropy.units as _u
+import astropy.constants as _const
+import astropy.cosmology as _cosmology
+import scipy.integrate as _integrate
 
 class MakinoProfile:
     
@@ -28,7 +27,7 @@ class MakinoProfile:
         self.f_gas = f_gas
         
         if cosmo is None:
-            cosmo = cosmology.Planck15
+            cosmo = _cosmology.Planck15
         self.cosmo = cosmo
         
         if omega_b is None:
@@ -66,25 +65,25 @@ class MakinoProfile:
     @staticmethod
     def calculate_temperature(halo_mass, mu, virial_radius, gamma_isothermal=1.5):
         """Calculates the virial temperature using an isothermal approximation from Makino+98"""
-        t_vir = (gamma_isothermal/3.0) * (mu * const.m_p) * (const.G * halo_mass) / (virial_radius)
-        return t_vir.to(u.keV)
+        t_vir = (gamma_isothermal/3.0) * (mu * _const.m_p) * (_const.G * halo_mass) / (virial_radius)
+        return t_vir.to(_u.keV)
         
     @staticmethod
-    def calculate_critical_density(redshift, cosmo=cosmology.Planck15):
+    def calculate_critical_density(redshift, cosmo=_cosmology.Planck15):
         """Calculates the critical density parameter for the given redshift,
         using the Planck (15) survey results for the hubble constant"""
         H_squared = cosmo.H(redshift) ** 2
-        critical_density = (3.0 * H_squared) / (8.0 * np.pi * const.G)
-        return critical_density.to(u.g / u.cm ** 3)
+        critical_density = (3.0 * H_squared) / (8.0 * _np.pi * _const.G)
+        return critical_density.to(_u.g / _u.cm ** 3)
     
     @staticmethod
     def calculate_virial_radius(virial_mass, delta_vir, critical_density):
         """Calculates the virial radius for the given virial mass, delta_vir and critical density"""
-        r_vir = ((3.0 * virial_mass)/(4.0 * np.pi * delta_vir * critical_density)) ** (1.0/3.0)
-        return r_vir.to(u.kpc)
+        r_vir = ((3.0 * virial_mass)/(4.0 * _np.pi * delta_vir * critical_density)) ** (1.0/3.0)
+        return r_vir.to(_u.kpc)
     
     @staticmethod
-    def calculate_concentration(virial_mass, method = 'bullock', redshift = 0, cosmo=cosmology.Planck15):
+    def calculate_concentration(virial_mass, method = 'bullock', redshift = 0, cosmo=_cosmology.Planck15):
         """Calculates the concentration parameter for a given virial mass and redshift"""
         # parameters for Dolag+04, delta_vir is 200 using MEAN density. Cosmology closely matches WMAP9
         c_0_dolag = 9.59
@@ -112,7 +111,7 @@ class MakinoProfile:
         
         # parameters for Dutton+14, NFW model, delta_vir = 200 using critical density, Planck cosmology
         b_dutton = -0.101 + 0.026 * redshift
-        a_dutton = 0.520 + (0.905 - 0.520) * np.exp(-0.617 * (redshift ** 1.21))
+        a_dutton = 0.520 + (0.905 - 0.520) * _np.exp(-0.617 * (redshift ** 1.21))
         
         # parameters for Maccio+08, NFW model, WMAP5, delta_vir = 200 using critical density
         zero_maccio = 0.787
@@ -123,30 +122,30 @@ class MakinoProfile:
         
         # Dolag+04 method
         if method == 'dolag':
-            c = (c_0_dolag)/(1 + redshift) * ((virial_mass / (10.0 ** 14 * u.M_sun * (1.0/cosmo.h))) ** alpha_dolag)
+            c = (c_0_dolag)/(1 + redshift) * ((virial_mass / (10.0 ** 14 * _u.M_sun * (1.0/cosmo.h))) ** alpha_dolag)
         # Bullock+01 method, cosmological parameters agree with WMAP9, delta_vir = 180 using 337 using mean density (for LambdaCDM)
         elif method == 'bullock':
-            c = (8.0/(1+redshift)) * (10 ** ((-0.13)*(np.log10(virial_mass.to(u.M_sun).value)-14.15)))
+            c = (8.0/(1+redshift)) * (10 ** ((-0.13)*(_np.log10(virial_mass.to(_u.M_sun).value)-14.15)))
         # Klypin+16 methods
         elif method == 'klypin-planck-all':
-            c = (c_0_klypin_planck_all * ((virial_mass / (1e12 * u.M_sun * (cosmo.h ** (-1)))) ** -gamma_klypin_planck_all) * 
-                 (1 + (virial_mass / (m_0_klypin_planck_all * (1e12 * u.M_sun * (cosmo.h ** (-1))))) ** 0.4))
+            c = (c_0_klypin_planck_all * ((virial_mass / (1e12 * _u.M_sun * (cosmo.h ** (-1)))) ** -gamma_klypin_planck_all) * 
+                 (1 + (virial_mass / (m_0_klypin_planck_all * (1e12 * _u.M_sun * (cosmo.h ** (-1))))) ** 0.4))
         elif method == 'klypin-planck-relaxed':
-            c = (c_0_klypin_planck_relaxed * ((virial_mass / (1e12 * u.M_sun * (cosmo.h ** (-1)))) ** -gamma_klypin_planck_relaxed) * 
-                 (1 + (virial_mass / (m_0_klypin_planck_relaxed * (1e12 * u.M_sun * (cosmo.h ** (-1))))) ** 0.4))
+            c = (c_0_klypin_planck_relaxed * ((virial_mass / (1e12 * _u.M_sun * (cosmo.h ** (-1)))) ** -gamma_klypin_planck_relaxed) * 
+                 (1 + (virial_mass / (m_0_klypin_planck_relaxed * (1e12 * _u.M_sun * (cosmo.h ** (-1))))) ** 0.4))
         elif method == 'klypin-wmap-all':
-            c = ((c_0_wmap_all * ((virial_mass / (1e12 * u.M_sun * (cosmo.h ** (-1)))) ** -gam_wmap_all)) *
-            ((1 + (virial_mass / (m_0_wmap_all * (1e12 * u.M_sun * (cosmo.h ** (-1))))) ** 0.4)))
+            c = ((c_0_wmap_all * ((virial_mass / (1e12 * _u.M_sun * (cosmo.h ** (-1)))) ** -gam_wmap_all)) *
+            ((1 + (virial_mass / (m_0_wmap_all * (1e12 * _u.M_sun * (cosmo.h ** (-1))))) ** 0.4)))
         elif method == 'klypin-wmap-relaxed':
-            c = ((c_0_wmap_relaxed * ((virial_mass / (1e12 * u.M_sun * (cosmo.h ** (-1)))) ** -gam_wmap_relaxed)) *
-            ((1 + (virial_mass / (m_0_wmap_relaxed * (1e12 * u.M_sun * (cosmo.h ** (-1))))) ** 0.4)))
+            c = ((c_0_wmap_relaxed * ((virial_mass / (1e12 * _u.M_sun * (cosmo.h ** (-1)))) ** -gam_wmap_relaxed)) *
+            ((1 + (virial_mass / (m_0_wmap_relaxed * (1e12 * _u.M_sun * (cosmo.h ** (-1))))) ** 0.4)))
         # Dutton+14 method
         elif method == 'dutton':
-            logc = a_dutton + b_dutton * np.log10(virial_mass / (1e12 * (cosmo.h ** -1) * u.M_sun))
+            logc = a_dutton + b_dutton * _np.log10(virial_mass / (1e12 * (cosmo.h ** -1) * _u.M_sun))
             c = 10 ** logc
         # Maccio+08 method
         elif method == 'maccio':
-            logc = zero_maccio + slope_maccio * (np.log10(virial_mass / (u.M_sun * (1.0/cosmo.h))) - 12)
+            logc = zero_maccio + slope_maccio * (_np.log10(virial_mass / (_u.M_sun * (1.0/cosmo.h))) - 12)
             c = 10 ** logc
         return c
     
@@ -159,35 +158,35 @@ class MakinoProfile:
     @staticmethod
     def calculate_characteristic_density(delta_vir, concentration):
         """Calculates the characteristic density for a given Delta_vir and concentration"""
-        char_density = (delta_vir / 3.0) * ((concentration ** 3.0) / (np.log(1.0 + concentration) - (concentration / (1.0 + concentration))))
+        char_density = (delta_vir / 3.0) * ((concentration ** 3.0) / (_np.log(1.0 + concentration) - (concentration / (1.0 + concentration))))
         return char_density
     
     @staticmethod
     def calculate_nfw_parameter(r_s, char_density, rho_crit, mu, T):
         """Calculates the nfw parameter for a given scale radius, characteristic density, critical density, mean molecular weight
         and temperature (in keV)"""
-        delta_nfw = const.G * 4 * np.pi * char_density * rho_crit * (r_s ** 2.0) * (mu * const.m_p) / T
+        delta_nfw = _const.G * 4 * _np.pi * char_density * rho_crit * (r_s ** 2.0) * (mu * _const.m_p) / T
         return delta_nfw.si
     
     @staticmethod
     def calculate_phi_nfw(delta_nfw, mu, T):
         """Calculates phi NFW for a given NFW parameter, mean molecular weight and temperature"""
-        phi_nfw = -delta_nfw * (T / (mu * const.m_p))
+        phi_nfw = -delta_nfw * (T / (mu * _const.m_p))
         return phi_nfw.si
     
     @staticmethod
     def calculate_central_density(f_gas, omega_b, virial_mass, virial_radius, delta_nfw, r_s):
         """Calculates the central density for the NFW profile, given the hot gas fraction, baryonic matter percentage and
         virial mass of the halo"""
-        integral = (u.kpc ** 3 ) * integrate.quad(lambda r: 4*np.pi*(r**2) * np.exp(-delta_nfw)*np.power((1.0+r/r_s.value), delta_nfw / (r / r_s.value)), 0, virial_radius.value)
+        integral = (_u.kpc ** 3 ) * _integrate.quad(lambda r: 4*_np.pi*(r**2) * _np.exp(-delta_nfw)*_np.power((1.0+r/r_s.value), delta_nfw / (r / r_s.value)), 0, virial_radius.value)
         denom = integral[0]
         rho_0 = (f_gas * omega_b * virial_mass) / denom
-        return rho_0.to(u.g * u.cm ** (-3))
+        return rho_0.to(_u.g * _u.cm ** (-3))
     
     @staticmethod
     def calculate_sound_speed(gamma, T, mu):
-        return np.sqrt((gamma * T)/(mu * const.m_p)).to(u.km / u.s)
+        return _np.sqrt((gamma * T)/(mu * _const.m_p)).to(_u.km / _u.s)
     
     @staticmethod
     def calculate_density_at_radius(central_density, delta_nfw, r_s, r):
-        return central_density * np.exp(-delta_nfw)*(1+r/r_s) ** (delta_nfw/(r/r_s))
+        return central_density * _np.exp(-delta_nfw)*(1+r/r_s) ** (delta_nfw/(r/r_s))
