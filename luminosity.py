@@ -1,0 +1,126 @@
+from scipy import special as sp
+from astropy.cosmology import Planck15 as cosmo
+from astropy.convolution import convolve, Box2DKernel, Gaussian2DKernel
+
+def get_A(q):
+    return (sp.gamma(q/4.0 + 19.0/12.0) * sp.gamma(q/4.0 - 1.0/12.0) * sp.gamma(q/4.0 + 5.0/4.0)) / (sp.gamma(q/4.0 + 7.0/4.0))
+
+def get_K(q, gamma_c):
+    return get_A(q) * (1.0 / ((gamma_c - 1) ** ((q + 5.0)/4.0))) * (2.0 * np.pi / 3.0) ** (-(q - 1) / 2.0) * ((np.sqrt(3.0 * np.pi)) / ((16.0 * (np.pi ** 2.0)) * (q + 1.0)))
+
+def get_I(q, gamma_min = 10, gamma_max = 1e5):
+    return ((const.m_e * (const.c ** 2.0)) ** (2 - q)) * (((gamma_max ** (2.0 - q)) - (gamma_min ** (2.0 - q))) / (2.0 - q))
+
+def get_L0(q, gamma_c, eta=0.1, gamma_min = 10, gamma_max = 1e5, freq = 1 * u.GHz, prs = 1e-11 * u.Pa, vol = 1 * u.kpc ** 3):
+    log_inverse_I = -1.0 * np.log10(get_I(q, gamma_min, gamma_max).si.value)
+    log_eta_term = ((q+1) / 4.0) * np.log10(eta) + (-(q + 5.0) / 4.0) * np.log10(1.0 + eta)
+    log_mu0_term = ((q + 1) / 4.0) * np.log10(2 * const.mu0.si.value)
+    log_nu_term = (-(q - 1) / 2.0) * np.log10(freq.si.value * (const.m_e.si.value ** 3.0) * (const.c.si.value ** 4.0) * (1.0 / const.e.si.value))
+    log_const_term = np.log10(get_K(q, gamma_c) * ((const.e.si.value ** 3.0) / (const.eps0.si.value * const.c.si.value * const.m_e.si.value)))
+    log_p0_term = ((q + 5.0) / 4.0) * np.log10(prs.si.value)
+    L0 = 4 * np.pi * vol.si.value * 10 ** (log_const_term + log_nu_term + log_mu0_term + log_inverse_I + log_eta_term + log_p0_term)
+    return L0 * (u.W / u.Hz)
+
+def combine_tracers(simulation_data, ntracers):
+    """Helper function to combine multiple tracers into one array. Simply adds them up"""
+    ret = np.zeros_like(simulation_data.tr1)
+    for i in range(ntracers):
+        ret = ret + getattr(simulation_data, 'tr{0}'.format(i+1))
+    return ret
+
+def clamp_tracers(simulation_data, ntracers,
+                  tracer_threshold = 1e-7,
+                  tracer_effective_zero = 1e-10):
+    
+    return clamp_tracers_internal(combine_tracers(simulation_data, ntracers), tracer_threshold=tracer_threshold, 
+                                  tracer_effective_zero=tracer_effective_zero)
+
+def clamp_tracers_internal(tracers,
+                  tracer_threshold = 1e-7,
+                  tracer_effective_zero = 1e-10):
+    
+    # smooth the tracer data with a 2d box kernel of width 3
+    box2d = Box2DKernel(3)
+    radio_combined_tracers = convolve(tracers, box2d, boundary='extend')
+    radio_tracer_mask = np.where(radio_combined_tracers > tracer_threshold, 1.0, tracer_effective_zero)
+
+    # create new tracer array that is clamped to tracer values
+    clamped_tracers = radio_combined_tracers.copy()
+    clamped_tracers[clamped_tracers <= tracer_threshold] = tracer_effective_zero
+    
+    return (radio_tracer_mask, clamped_tracers, radio_combined_tracers)
+
+def get_luminosity(simulation_data, 
+                   unit_density, unit_length, unit_time,
+                   redshift,
+                   beam_FWHM_arcsec,
+                   ntracers,
+                   q=2.2,
+                   gamma_c=4.0/3.0,
+                   eta=0.1,
+                   freq=1.4 * u.GHz,
+                   prs_scale=1e-11 * u.Pa,
+                   vol_scale=(1*u.kpc) ** 3,
+                   alpha=0.6,
+                   tracer_threshold=1.0e-7,
+                   tracer_effective_zero=1e-10,
+                   radio_cell_volumes = None,
+                   radio_cell_areas = None,
+                   L0 = None,
+                   calculate_luminosity = True,
+                   convolve_flux = False):
+    
+    # units
+    unit_mass = (unit_density * (unit_length ** 3)).to(u.kg)
+    unit_pressure = unit_mass / (unit_length * unit_time ** 2)
+    
+    # distance information and conversions
+    Dlumin = cosmo.luminosity_distance(redshift)
+    kpc_per_arcsec = cosmo.kpc_proper_per_arcmin(redshift).to(u.kpc / u.arcsec)
+    
+    # simulation data
+    if radio_cell_volumes is None:
+        radio_cell_volumes = ps.calculate_cell_volume(simulation_data)
+    if radio_cell_areas is None:
+        radio_cell_areas = ps.calculate_cell_area(simulation_data)
+    
+    # in physical units
+    radio_cell_areas_physical = radio_cell_areas * unit_length ** 2
+    radio_cell_volumes_physical = radio_cell_volumes * unit_length ** 3
+    
+    # pressure in physical units
+    radio_prs_scaled = simulation_data.prs * unit_pressure
+
+    # luminosity scaling
+    if L0 is None:
+        L0 = get_L0(q, gamma_c, eta, freq=freq, prs=prs_scale, vol=vol_scale)
+    
+    # beam information
+    sigma_beam_arcsec = beam_FWHM_arcsec / 2.355
+    area_beam_kpc2 = (np.pi * (sigma_beam_arcsec* kpc_per_arcsec) ** 2).to(u.kpc ** 2)
+    
+    # n beams per cell
+    n_beams_per_cell = (radio_cell_areas_physical / area_beam_kpc2).si
+    
+    (radio_tracer_mask, clamped_tracers, radio_combined_tracers) = clamp_tracers(simulation_data, 
+                                                                                 ntracers, 
+                                                                                 tracer_threshold,
+                                                                                 tracer_effective_zero)
+    
+    radio_luminosity_tracer_weighted = None
+    if calculate_luminosity is True:
+        radio_luminosity = (L0 * (radio_prs_scaled / prs_scale) ** ((q + 5.0) / 4.0) * radio_cell_volumes_physical / vol_scale).to(u.W / u.Hz)
+        radio_luminosity_tracer_weighted = radio_luminosity * radio_tracer_mask * clamped_tracers
+    
+    flux_const_term = (L0 / (4 * np.pi * (Dlumin ** 2))) * ((1+redshift) ** (1+alpha))
+    flux_prs_term = (radio_prs_scaled / prs_scale) ** ((q + 5.0) / 4.0)
+    flux_vol_term = radio_cell_volumes_physical / vol_scale
+    flux_beam_term = 1 / n_beams_per_cell
+    flux_density = (flux_const_term * flux_prs_term * flux_vol_term * flux_beam_term).to(u.Jy)
+    flux_density_tracer_weighted = flux_density * radio_tracer_mask * clamped_tracers
+    
+    if convolve_flux is True:
+        beam_kernel = Gaussian2DKernel((sigma_beam_arcsec * kpc_per_arcsec).to(u.kpc).value)
+        flux_density_tracer_weighted = convolve(flux_density_tracer_weighted.to(u.Jy), beam_kernel, boundary='extend') * u.Jy
+    
+    return (radio_luminosity_tracer_weighted, flux_density_tracer_weighted)
