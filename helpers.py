@@ -34,6 +34,7 @@ def create_colorbar(im, ax, fig, size='5%', padding=0.05, position='right', divi
     ca = fig.colorbar(im, cax=cax)
     cax.yaxis.set_ticks_position(position)
     cax.yaxis.set_label_position(position)
+    ca.solids.set_rasterized(True)
     return (ca, divider, cax)
 
 def printmd(string):

@@ -28,14 +28,14 @@ class AstroJet:
         self.calculate_length_scales()
         
     def calculate_length_scales(self):
-        self.v_jet = self.get_V_jet()
+        self.v_jet = self.get_v_jet()
         self.L_1 = self.calculate_L_1()
         self.L_2 = self.calculate_L_2()
         self.omega = self.get_omega()
         self.L_1a = self.get_L_1_a()
         self.L_1b = self.get_L_1_b()
         self.L_1c = self.get_L_1_c()
-        self.time_scaling = (self.L_1 / self.c_x).to(u.Myr)
+        self.time_scaling = (self.L_1 / self.c_x).to(_u.Myr)
         self.length_scaling = self.L_1
         
         
@@ -47,11 +47,11 @@ class AstroJet:
     def get_omega(self):
         return 2.0 * _np.pi * (1-_np.cos(self.theta)) 
     def get_L_1_b(self):
-        return _np.sqrt(1.0/(4.0 * (self.Omega))) * self.L_1 
+        return _np.sqrt(1.0/(4.0 * (self.omega))) * self.L_1 
     def get_L_1_a(self):
-        return _np.sqrt((self.gamma / (4 * self.Omega)) * (self.M_x ** 2) * (_np.sin(self.theta) ** 2)) * self.L_1 
+        return _np.sqrt((self.gamma / (4 * self.omega)) * (self.M_x ** 2) * (_np.sin(self.theta) ** 2)) * self.L_1 
     def get_L_1_c(self):
-        return _np.sqrt((self.gamma / (4 * self.Omega)) * (self.M_x ** 2)) * self.L_1
+        return _np.sqrt((self.gamma / (4 * self.omega)) * (self.M_x ** 2)) * self.L_1
     def get_v_jet(self):
         return self.M_x * self.c_x
     

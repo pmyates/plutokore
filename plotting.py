@@ -3,11 +3,14 @@ import environments.makino as _NFW
 import simulations as _ps
 import matplotlib.gridspec as _gridspec
 from mpl_toolkits.axes_grid1 import make_axes_locatable as _make_axes_locatable
+import numpy as _np
+from matplotlib import pyplot as _plt
+import helpers as _hp
 
 def get_pluto_data_direct(data_object, variable, log, simulation_directory, timestep):
     variable_data = getattr(data_object, variable).T
     if log is True:
-        variable_data = np.log10(variable_data)
+        variable_data = _np.log10(variable_data)
     return variable_data
 
 def get_pluto_data_direct_no_log(data_object, variable, log, simulation_directory, timestep):
@@ -86,16 +89,16 @@ def get_animation(simulation_directory, timeste_ps, time_scaling, length_scaling
     # plot colobar function
     def plot_colorbar(images):
         if multiple_var is True:
-            (cb1, div, cax1) = create_colorbar(images[0], ax, f1, size=cbar_size, padding=figure_properties.cbar_padding)
+            (cb1, div, cax1) = _hp.create_colorbar(images[0], ax, f1, size=cbar_size, padding=figure_properties.cbar_padding)
             cb1.set_label(figure_properties.cbar_label[0])
             if need_two_colorbars is True:
-                (cb2, div, cax2) = create_colorbar(images[1], ax, f1, size=cbar_size, 
+                (cb2, div, cax2) = _hp.create_colorbar(images[1], ax, f1, size=cbar_size, 
                                                    padding=figure_properties.cbar_padding, position='left',
                                                    divider=div)
                 cb2.set_label(figure_properties.cbar_label[1])
             return div
         else:
-            (cb1, div, cax1) = create_colorbar(images, ax, f1, size=cbar_size, padding=figure_properties.cbar_padding)                               
+            (cb1, div, cax1) = _hp.create_colorbar(images, ax, f1, size=cbar_size, padding=figure_properties.cbar_padding)                               
             cb1.set_label(figure_properties.cbar_label)
             return div
         
@@ -117,18 +120,18 @@ def get_animation(simulation_directory, timeste_ps, time_scaling, length_scaling
     # get colorbar limits if necessary
     if multiple_var is True:
         if vmax is None:
-            vmax = np.max(v_last[0].ravel())
+            vmax = _np.max(v_last[0].ravel())
         if vmax2 is None:
-            vmax2 = np.max(v_last[1].ravel())
+            vmax2 = _np.max(v_last[1].ravel())
         if vmin is None:
-            vmin = np.min(v_last[0].ravel())
+            vmin = _np.min(v_last[0].ravel())
         if vmin2 is None:
-            vmin2 = np.min(v_last[1].ravel())
+            vmin2 = _np.min(v_last[1].ravel())
     else:
         if vmax is None:
-            vmax = np.max(v_last.ravel())
+            vmax = _np.max(v_last.ravel())
         if vmin is None:
-            vmin = np.min(v_last.ravel())
+            vmin = _np.min(v_last.ravel())
         
 
     # get cartesian coordinates
@@ -142,10 +145,10 @@ def get_animation(simulation_directory, timeste_ps, time_scaling, length_scaling
         X2_2 = X2_2 * length_scaling2.value
 
     # create the figure
-    f1 = plt.figure(figsize=[figure_properties.width,figure_properties.height]);
+    f1 = _plt.figure(figsize=[figure_properties.width,figure_properties.height]);
 
     # create the axes
-    ax = plt.axes(xlim=figure_properties.xlim, ylim=figure_properties.ylim);
+    ax = _plt.axes(xlim=figure_properties.xlim, ylim=figure_properties.ylim);
     
     # load inital data
     initial_data = _ps.load_timestep_data(timeste_ps[0], simulation_directory)
@@ -221,7 +224,7 @@ def get_animation(simulation_directory, timeste_ps, time_scaling, length_scaling
             tax.set_xlim(0, last_time * time_scaling.value)
             tax.hlines(1,0,last_time * time_scaling.value)
             tax.eventplot([d.SimTime * time_scaling.value], linewidths=[2], colors='k')
-            tax.set_xlabel('\nt = {0}'.format(np.round(d.SimTime * time_scaling)), fontsize=timebar_fontsize)
+            tax.set_xlabel('\nt = {0}'.format(_np.round(d.SimTime * time_scaling)), fontsize=timebar_fontsize)
 
         # clear notebook output
         clear_output(wait=True)
@@ -242,13 +245,13 @@ def plot_energy(simulation_directory, timeste_ps, sim_times, j, run_code, ax = N
                 draw_legend=True, draw_title=True):
     # get figure
     if ax is None or fig is None:
-        fig = plt.figure(figsize=(width,height))
-        ax = plt.axes()
+        fig = _plt.figure(figsize=(width,height))
+        ax = _plt.axes()
     
     initial_data = _ps.load_timestep_data(0, simulation_directory)
     E_sum, KE_sum, UE_sum, UTh_sum, flux_sum = _ps.calculate_total_run_energy(simulation_directory, timeste_ps,
-                                                                             np.rad2deg(j.theta), correct_numerical_errors=False)
-    theoretical_energy = _ps.calculate_theoretical_energy(initial_data, np.rad2deg(j.theta), j, sim_times)
+                                                                             _np.rad2deg(j.theta), correct_numerical_errors=False)
+    theoretical_energy = _ps.calculate_theoretical_energy(initial_data, _np.rad2deg(j.theta), j, sim_times)
 
     scaled_timeste_ps = sim_times * j.time_scaling
     ax.plot(scaled_timeste_ps, (UTh_sum - UTh_sum[0]) * energy_scaling.value, label='Thermal Energy')
@@ -261,20 +264,20 @@ def plot_energy(simulation_directory, timeste_ps, sim_times, j, run_code, ax = N
 
     # Plot the flux
     if plot_flux is True:
-        ax.plot(timeste_ps, flux_sum * np.asarray(sim_times), '-.', label='Energy flux accross boundary')
+        ax.plot(timeste_ps, flux_sum * _np.asarray(sim_times), '-.', label='Energy flux accross boundary')
     
     # label everything
     if draw_title is True:
         ax.set_title('Energy Components for {0}'.format(run_code))
     
     #if draw_legend is True:
-    #    plt.legend(loc='best')
+    #    _plt.legend(loc='best')
     
     # set axes
     #ax.set_ylim(0, 200000);
     
     # print percentage error
-    # print('Run {0} boundary flux error: {1}'.format(run_code, ((flux_sum[-1] * np.asarray(sim_times)[-1]) - (theoretical_energy[-1]))/(theoretical_energy[-1])))
+    # print('Run {0} boundary flux error: {1}'.format(run_code, ((flux_sum[-1] * _np.asarray(sim_times)[-1]) - (theoretical_energy[-1]))/(theoretical_energy[-1])))
     # print('Run {0} measured energy error: {1}'.format(run_code, ((E_sum[-1] - E_sum[0]) - (theoretical_energy[-1]))/(theoretical_energy[-1])))
 
 
@@ -287,15 +290,15 @@ FigureProperties = _namedtuple('FigureProperties', ['width', 'height',
                               'suptitle', 'aspect', 'xlim', 'ylim', 'xlabel',
                               'ylabel', 'cbar_label', 'cbar_padding', 'timebar_padding', 'vmin', 'vmax'])
 
-def plot_multiple_timeste_ps(simulation_dir, times, ts, ls, var, figure_properties, ncol = 5, log = True, colorbar=True, vs=1):
+def plot_multiple_timesteps(simulation_dir, times, ts, ls, var, figure_properties, ncol = 5, log = True, colorbar=True, vs=1):
     
     # calculate number of rows from max number of columns
-    nrow = int(np.ceil(len(times) / float(ncol)))
+    nrow = int(_np.ceil(len(times) / float(ncol)))
     
     # create the figure
     gs = _gridspec.GridSpec(nrow, ncol)
     
-    fig = plt.figure(figsize=(figure_properties.width, figure_properties.height))
+    fig = _plt.figure(figsize=(figure_properties.width, figure_properties.height))
     fig.suptitle(figure_properties.suptitle)
     
     # load the coordinate data
@@ -309,7 +312,7 @@ def plot_multiple_timeste_ps(simulation_dir, times, ts, ls, var, figure_properti
         d = _ps.load_timestep_data(times[i], simulation_dir)
         
         # setup axes
-        ax = plt.subplot(gs[i / ncol, i % ncol])
+        ax = _plt.subplot(gs[i / ncol, i % ncol])
         ax.set_aspect(figure_properties.aspect)
         ax.set_xlim(figure_properties.xlim)
         ax.set_ylim(figure_properties.ylim)
@@ -325,7 +328,7 @@ def plot_multiple_timeste_ps(simulation_dir, times, ts, ls, var, figure_properti
         # load variable data
         v_data = getattr(d, var).T*vs
         if log is True:
-            v_data = np.log10(v_data)
+            v_data = _np.log10(v_data)
         
         # plot data
         im = ax.pcolormesh(X1 * ls.value, X2 * ls.value, v_data, vmin=figure_properties.vmin, vmax=figure_properties.vmax)
@@ -333,7 +336,7 @@ def plot_multiple_timeste_ps(simulation_dir, times, ts, ls, var, figure_properti
         
         # make colorbar
         if colorbar is True:
-            (ca, div, cax) = create_colorbar(im,ax,fig)
+            (ca, div, cax) = _hp.create_colorbar(im,ax,fig)
             
             if (i%ncol) == 1:
                 ca.set_label(figure_properties.cbar_label)

@@ -1,5 +1,8 @@
 import astropy.units as _u
+import simulations as _ps
+import numpy as _np
 from scipy import special as _sp
+from astropy import constants as _const
 from astropy.cosmology import Planck15 as _cosmo
 from astropy.convolution import convolve as _convolve
 from astropy.convolution import Box2DKernel as _Box2DKernel
@@ -9,24 +12,24 @@ def get_A(q):
     return (_sp.gamma(q/4.0 + 19.0/12.0) * _sp.gamma(q/4.0 - 1.0/12.0) * _sp.gamma(q/4.0 + 5.0/4.0)) / (_sp.gamma(q/4.0 + 7.0/4.0))
 
 def get_K(q, gamma_c):
-    return get_A(q) * (1.0 / ((gamma_c - 1) ** ((q + 5.0)/4.0))) * (2.0 * np.pi / 3.0) ** (-(q - 1) / 2.0) * ((np.sqrt(3.0 * np.pi)) / ((16.0 * (np.pi ** 2.0)) * (q + 1.0)))
+    return get_A(q) * (1.0 / ((gamma_c - 1) ** ((q + 5.0)/4.0))) * (2.0 * _np.pi / 3.0) ** (-(q - 1) / 2.0) * ((_np.sqrt(3.0 * _np.pi)) / ((16.0 * (_np.pi ** 2.0)) * (q + 1.0)))
 
 def get_I(q, gamma_min = 10, gamma_max = 1e5):
-    return ((const.m_e * (const.c ** 2.0)) ** (2 - q)) * (((gamma_max ** (2.0 - q)) - (gamma_min ** (2.0 - q))) / (2.0 - q))
+    return ((_const.m_e * (_const.c ** 2.0)) ** (2 - q)) * (((gamma_max ** (2.0 - q)) - (gamma_min ** (2.0 - q))) / (2.0 - q))
 
 def get_L0(q, gamma_c, eta=0.1, gamma_min = 10, gamma_max = 1e5, freq = 1 * _u.GHz, prs = 1e-11 * _u.Pa, vol = 1 * _u.kpc ** 3):
-    log_inverse_I = -1.0 * np.log10(get_I(q, gamma_min, gamma_max).si.value)
-    log_eta_term = ((q+1) / 4.0) * np.log10(eta) + (-(q + 5.0) / 4.0) * np.log10(1.0 + eta)
-    log_mu0_term = ((q + 1) / 4.0) * np.log10(2 * const.mu0.si.value)
-    log_nu_term = (-(q - 1) / 2.0) * np.log10(freq.si.value * (const.m_e.si.value ** 3.0) * (const.c.si.value ** 4.0) * (1.0 / const.e.si.value))
-    log_const_term = np.log10(get_K(q, gamma_c) * ((const.e.si.value ** 3.0) / (const.eps0.si.value * const.c.si.value * const.m_e.si.value)))
-    log_p0_term = ((q + 5.0) / 4.0) * np.log10(prs.si.value)
-    L0 = 4 * np.pi * vol.si.value * 10 ** (log_const_term + log_nu_term + log_mu0_term + log_inverse_I + log_eta_term + log_p0_term)
+    log_inverse_I = -1.0 * _np.log10(get_I(q, gamma_min, gamma_max).si.value)
+    log_eta_term = ((q+1) / 4.0) * _np.log10(eta) + (-(q + 5.0) / 4.0) * _np.log10(1.0 + eta)
+    log_mu0_term = ((q + 1) / 4.0) * _np.log10(2 * _const.mu0.si.value)
+    log_nu_term = (-(q - 1) / 2.0) * _np.log10(freq.si.value * (_const.m_e.si.value ** 3.0) * (_const.c.si.value ** 4.0) * (1.0 / _const.e.si.value))
+    log_const_term = _np.log10(get_K(q, gamma_c) * ((_const.e.si.value ** 3.0) / (_const.eps0.si.value * _const.c.si.value * _const.m_e.si.value)))
+    log_p0_term = ((q + 5.0) / 4.0) * _np.log10(prs.si.value)
+    L0 = 4 * _np.pi * vol.si.value * 10 ** (log_const_term + log_nu_term + log_mu0_term + log_inverse_I + log_eta_term + log_p0_term)
     return L0 * (_u.W / _u.Hz)
 
 def combine_tracers(simulation_data, ntracers):
     """Helper function to combine multiple tracers into one array. Simply adds them up"""
-    ret = np.zeros_like(simulation_data.tr1)
+    ret = _np.zeros_like(simulation_data.tr1)
     for i in range(ntracers):
         ret = ret + getattr(simulation_data, 'tr{0}'.format(i+1))
     return ret
@@ -45,7 +48,7 @@ def clamp_tracers_internal(tracers,
     # smooth the tracer data with a 2d box kernel of width 3
     box2d = _Box2DKernel(3)
     radio_combined_tracers = _convolve(tracers, box2d, boundary='extend')
-    radio_tracer_mask = np.where(radio_combined_tracers > tracer_threshold, 1.0, tracer_effective_zero)
+    radio_tracer_mask = _np.where(radio_combined_tracers > tracer_threshold, 1.0, tracer_effective_zero)
 
     # create new tracer array that is clamped to tracer values
     clamped_tracers = radio_combined_tracers.copy()
@@ -83,9 +86,9 @@ def get_luminosity(simulation_data,
     
     # simulation data
     if radio_cell_volumes is None:
-        radio_cell_volumes = ps.calculate_cell_volume(simulation_data)
+        radio_cell_volumes = _ps.calculate_cell_volume(simulation_data)
     if radio_cell_areas is None:
-        radio_cell_areas = ps.calculate_cell_area(simulation_data)
+        radio_cell_areas = _ps.calculate_cell_area(simulation_data)
     
     # in physical units
     radio_cell_areas_physical = radio_cell_areas * unit_length ** 2
@@ -100,7 +103,7 @@ def get_luminosity(simulation_data,
     
     # beam information
     sigma_beam_arcsec = beam_FWHM_arcsec / 2.355
-    area_beam_kpc2 = (np.pi * (sigma_beam_arcsec* kpc_per_arcsec) ** 2).to(_u.kpc ** 2)
+    area_beam_kpc2 = (_np.pi * (sigma_beam_arcsec* kpc_per_arcsec) ** 2).to(_u.kpc ** 2)
     
     # n beams per cell
     n_beams_per_cell = (radio_cell_areas_physical / area_beam_kpc2).si
@@ -115,7 +118,7 @@ def get_luminosity(simulation_data,
         radio_luminosity = (L0 * (radio_prs_scaled / prs_scale) ** ((q + 5.0) / 4.0) * radio_cell_volumes_physical / vol_scale).to(_u.W / _u.Hz)
         radio_luminosity_tracer_weighted = radio_luminosity * radio_tracer_mask * clamped_tracers
     
-    flux_const_term = (L0 / (4 * np.pi * (Dlumin ** 2))) * ((1+redshift) ** (1+alpha))
+    flux_const_term = (L0 / (4 * _np.pi * (Dlumin ** 2))) * ((1+redshift) ** (1+alpha))
     flux_prs_term = (radio_prs_scaled / prs_scale) ** ((q + 5.0) / 4.0)
     flux_vol_term = radio_cell_volumes_physical / vol_scale
     flux_beam_term = 1 / n_beams_per_cell
