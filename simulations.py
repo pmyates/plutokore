@@ -41,11 +41,16 @@ def LoadSimulationTimes(run_directory, run_timesteps):
         times.append(energy_data.SimTime)
     return times
 
-def sphericaltocartesian(run_data):
+def sphericaltocartesian(run_data, rotation=None):
+
+    # default rotation is pi / 2 
+    # (results in jet pointing up for certain simulations)
+    if rotation is None:
+        rotation = _np.pi / 2
     # generate the spherical polar grid
     R, Theta = _np.meshgrid(run_data.x1, run_data.x2)
     # rotate theta so that jet is pointing upwards - not necessarily needed
-    Theta = Theta - _np.pi/2
+    Theta = Theta - rotation
 
     # convert spherical polar grid to cartesian
     X1 = R * _np.cos(Theta)
