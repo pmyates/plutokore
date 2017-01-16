@@ -89,7 +89,7 @@ def clamp_tracers_internal(tracers,
     return (radio_tracer_mask, clamped_tracers, radio_combined_tracers)
 
 
-def get_luminosity(simulation_data,
+def get_luminosity_old(simulation_data,
                    unit_density,
                    unit_length,
                    unit_time,
@@ -176,7 +176,7 @@ def get_luminosity(simulation_data,
     return (radio_luminosity_tracer_weighted, flux_density_tracer_weighted)
 
 
-def get_luminosity_new(
+def get_luminosity(
         simulation_data,
         unit_values,
         redshift,
