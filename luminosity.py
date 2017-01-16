@@ -262,15 +262,19 @@ def get_convolved_flux_density(flux_density, redshift, beam_FWHM_arcsec):
     return flux_density
 
 
-def get_surface_brightness(flux_density, simulation_data, n_beams_per_cell):
+def get_surface_brightness(flux_density, simulation_data, unit_values, redshift, beam_FWHM_arcsec):
 
+    kpc_per_arcsec = _cosmo.kpc_proper_per_arcmin(redshift).to(_u.kpc /
+                                                               _u.arcsec)
+    # beam information
+    sigma_beam_arcsec = beam_FWHM_arcsec / 2.355
     area_beam_kpc2 = (_np.pi * (sigma_beam_arcsec * kpc_per_arcsec)
                       **2).to(_u.kpc**2)
 
     radio_cell_areas = _ps.calculate_cell_area(simulation_data)
 
     # in physical units
-    radio_cell_areas_physical = radio_cell_areas * unit_length**2
+    radio_cell_areas_physical = radio_cell_areas * unit_values.length**2
 
     # n beams per cell
     n_beams_per_cell = (radio_cell_areas_physical / area_beam_kpc2).si
