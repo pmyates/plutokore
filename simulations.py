@@ -26,7 +26,10 @@ def get_output_count(directory):
 
 def get_tracer_count(directory):
     data = load_timestep_data(0, directory)
-    return len([trc for trc in data.vars if 'tr' in trc])
+    return get_tracer_count_data(data)
+
+def get_tracer_count_data(sim_data):
+    return len([trc for trc in sim_data.vars if 'tr' in trc])
 
 def load_timestep_data(timestep, directory, suppress_output = None):
     with _ExitStack() as stack:
