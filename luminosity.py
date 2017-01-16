@@ -74,7 +74,7 @@ def get_luminosity(simulation_data,
                    radio_cell_areas = None,
                    L0 = None,
                    calculate_luminosity = True,
-                   _convolve_flux = False):
+                   convolve_flux = False):
     
     # units
     unit_mass = (unit_density * (unit_length ** 3)).to(_u.kg)
@@ -125,7 +125,7 @@ def get_luminosity(simulation_data,
     flux_density = (flux_const_term * flux_prs_term * flux_vol_term * flux_beam_term).to(_u.Jy)
     flux_density_tracer_weighted = flux_density * radio_tracer_mask * clamped_tracers
     
-    if _convolve_flux is True:
+    if convolve_flux is True:
         beam_kernel = _Gaussian2DKernel((sigma_beam_arcsec * kpc_per_arcsec).to(_u.kpc).value)
         flux_density_tracer_weighted = _convolve(flux_density_tracer_weighted.to(_u.Jy), beam_kernel, boundary='extend') * _u.Jy
     

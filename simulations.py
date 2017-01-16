@@ -17,6 +17,17 @@ def LoadSimulationData(ids, directory, suppress_output = None):
             data.append(_pp.pload(i, w_dir=directory))
     return data
 
+def get_nlast_info(directory):
+    with _suppress_stdout():
+        return _pp.nlast_info(w_dir=directory)
+
+def get_output_count(directory):
+    return get_nlast_info(directory)['nlast']
+
+def get_tracer_count(directory):
+    data = load_timestep_data(0, directory)
+    return len([trc for trc in data.vars if 'tr' in trc])
+
 def load_timestep_data(timestep, directory, suppress_output = None):
     with _ExitStack() as stack:
         if suppress_output in [None, True]:

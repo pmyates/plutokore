@@ -27,10 +27,13 @@ def suppress_stdout():
         finally:
             _sys.stdout = old_stdout
 
-def create_colorbar(im, ax, fig, size='5%', padding=0.05, position='right', divider=None):
-    if divider is None:
-        divider = _make_axes_locatable(ax)
-    cax = divider.append_axes(position, size=size, pad=padding)
+def create_colorbar(im, ax, fig, size='5%', padding=0.05, position='right', divider=None, use_ax=False):
+    if use_ax is False:
+        if divider is None:
+            divider = _make_axes_locatable(ax)
+        cax = divider.append_axes(position, size=size, pad=padding)
+    else:
+        cax = ax
     ca = fig.colorbar(im, cax=cax)
     cax.yaxis.set_ticks_position(position)
     cax.yaxis.set_label_position(position)
@@ -84,3 +87,13 @@ def get_unit_values(environment, jet):
                       pressure=unit_pressure,
                       energy=unit_energy,
                       speed=unit_speed)
+
+def close_open_hdf5_files():
+    import gc
+    import h5py
+    for obj in gc.get_objects():   # Browse through ALL objects
+        if isinstance(obj, h5py.File):   # Just HDF5 files
+            try:
+                obj.close()
+            except:
+                pass # Was already closed
