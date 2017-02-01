@@ -2,7 +2,6 @@ import os as _os
 import sys as _sys
 import numpy as _np
 import pyPLUTO as _pp
-import matplotlib.pyplot as _plt
 from IPython.display import display as _display
 from IPython.display import Markdown as _Markdown
 from contextlib import contextmanager as _contextmanager
@@ -55,6 +54,7 @@ def figsize(scale, ratio=None):
     return fig_size
 
 def newfig(width, ratio=None):
+    import matplotlib.pyplot as _plt
     _plt.clf()
     fig = _plt.figure(figsize=figsize(width, ratio))
     ax = fig.add_subplot(111)

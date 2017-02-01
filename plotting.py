@@ -3,8 +3,8 @@ import environments.makino as _NFW
 import simulations as _ps
 import matplotlib.gridspec as _gridspec
 from mpl_toolkits.axes_grid1 import make_axes_locatable as _make_axes_locatable
+from collections import namedtuple as _namedtuple
 import numpy as _np
-from matplotlib import pyplot as _plt
 import helpers as _hp
 
 def get_pluto_data_direct(data_object, variable, log, simulation_directory, timestep):
@@ -29,6 +29,8 @@ def get_animation(simulation_directory, timeste_ps, time_scaling, length_scaling
                   draw_timebar = True,
                   draw_function = None,
                   length_scaling2 = None):
+
+    from matplotlib import pyplot as _plt
     
     # load data function
     def load_data(pluto_data, t=-1):
@@ -243,6 +245,9 @@ def get_animation(simulation_directory, timeste_ps, time_scaling, length_scaling
 def plot_energy(simulation_directory, timeste_ps, sim_times, j, run_code, ax = None, fig = None,
                 plot_theoretical = True, plot_flux = True, width=10, height=10, energy_scaling = 1 * _u.J,
                 draw_legend=True, draw_title=True):
+
+    from matplotlib import pyplot as _plt
+
     # get figure
     if ax is None or fig is None:
         fig = _plt.figure(figsize=(width,height))
@@ -280,18 +285,14 @@ def plot_energy(simulation_directory, timeste_ps, sim_times, j, run_code, ax = N
     # print('Run {0} boundary flux error: {1}'.format(run_code, ((flux_sum[-1] * _np.asarray(sim_times)[-1]) - (theoretical_energy[-1]))/(theoretical_energy[-1])))
     # print('Run {0} measured energy error: {1}'.format(run_code, ((E_sum[-1] - E_sum[0]) - (theoretical_energy[-1]))/(theoretical_energy[-1])))
 
-
-import matplotlib.gridspec as _gridspec
-from mpl_toolkits.axes_grid1 import make_axes_locatable as _make_axes_locatable
-
-from collections import namedtuple as _namedtuple
-
 FigureProperties = _namedtuple('FigureProperties', ['width', 'height', 
                               'suptitle', 'aspect', 'xlim', 'ylim', 'xlabel',
                               'ylabel', 'cbar_label', 'cbar_padding', 'timebar_padding', 'vmin', 'vmax'])
 
 def plot_multiple_timesteps(simulation_dir, times, ts, ls, var, figure_properties, ncol = 5, log = True, colorbar=True, vs=1):
     
+    from matplotlib import pyplot as _plt
+
     # calculate number of rows from max number of columns
     nrow = int(_np.ceil(len(times) / float(ncol)))
     
