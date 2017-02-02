@@ -91,26 +91,26 @@ def clamp_tracers_internal(tracers,
 
 
 def get_luminosity_old(simulation_data,
-                   unit_density,
-                   unit_length,
-                   unit_time,
-                   redshift,
-                   beam_FWHM_arcsec,
-                   ntracers,
-                   q=2.2,
-                   gamma_c=4.0 / 3.0,
-                   eta=0.1,
-                   freq=1.4 * _u.GHz,
-                   prs_scale=1e-11 * _u.Pa,
-                   vol_scale=(1 * _u.kpc)**3,
-                   alpha=0.6,
-                   tracer_threshold=1.0e-7,
-                   tracer_effective_zero=1e-10,
-                   radio_cell_volumes=None,
-                   radio_cell_areas=None,
-                   L0=None,
-                   calculate_luminosity=True,
-                   convolve_flux=False):
+                       unit_density,
+                       unit_length,
+                       unit_time,
+                       redshift,
+                       beam_FWHM_arcsec,
+                       ntracers,
+                       q=2.2,
+                       gamma_c=4.0 / 3.0,
+                       eta=0.1,
+                       freq=1.4 * _u.GHz,
+                       prs_scale=1e-11 * _u.Pa,
+                       vol_scale=(1 * _u.kpc)**3,
+                       alpha=0.6,
+                       tracer_threshold=1.0e-7,
+                       tracer_effective_zero=1e-10,
+                       radio_cell_volumes=None,
+                       radio_cell_areas=None,
+                       L0=None,
+                       calculate_luminosity=True,
+                       convolve_flux=False):
 
     # units
     unit_mass = (unit_density * (unit_length**3)).to(_u.kg)
@@ -191,7 +191,7 @@ def get_luminosity(
         tracer_threshold=1.0e-7,
         tracer_effective_zero=1e-10,
         radio_cell_volumes=None,
-        radio_cell_areas=None,):
+        radio_cell_areas=None, ):
 
     # distance information and conversions
     Dlumin = _cosmo.luminosity_distance(redshift)
@@ -263,7 +263,8 @@ def get_convolved_flux_density(flux_density, redshift, beam_FWHM_arcsec):
     return flux_density
 
 
-def get_surface_brightness(flux_density, simulation_data, unit_values, redshift, beam_FWHM_arcsec):
+def get_surface_brightness(flux_density, simulation_data, unit_values,
+                           redshift, beam_FWHM_arcsec):
 
     kpc_per_arcsec = _cosmo.kpc_proper_per_arcmin(redshift).to(_u.kpc /
                                                                _u.arcsec)

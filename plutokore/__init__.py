@@ -7,4 +7,6 @@ import plotting
 import simulations
 import helpers
 
-__all__ = ['environments', 'luminosity', 'plotting', 'simulations', 'jet', 'helpers']
+__all__ = [
+    'environments', 'luminosity', 'plotting', 'simulations', 'jet', 'helpers'
+]
