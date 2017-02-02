@@ -1,8 +1,8 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name='plutokore',
-    packages=['plutokore'],
+    packages=find_packages(), 
     version='0.1',
     description='Python tool for analysing PLUTO simulation data',
     author='Patrick Yates',
