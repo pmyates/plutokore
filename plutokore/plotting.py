@@ -1,11 +1,13 @@
+from __future__ import print_function
+from __future__ import absolute_import
 import astropy.units as _u
-import environments.makino as _NFW
-import simulations as _ps
+from . import environments.makino as _NFW
+from . import simulations as _ps
 import matplotlib.gridspec as _gridspec
 from mpl_toolkits.axes_grid1 import make_axes_locatable as _make_axes_locatable
 from collections import namedtuple as _namedtuple
 import numpy as _np
-import helpers as _hp
+from . import helpers as _hp
 
 def get_pluto_data_direct(data_object, variable, log, simulation_directory, timestep):
     variable_data = getattr(data_object, variable).T
@@ -232,7 +234,7 @@ def get_animation(simulation_directory, timeste_ps, time_scaling, length_scaling
         clear_output(wait=True)
         
         # print progress bar
-        print 'Processed {0}/{1}'.format(i,len(timeste_ps))
+        print('Processed {0}/{1}'.format(i,len(timeste_ps)))
         
         # flush progress string
         sys.stdout.flush()
@@ -313,14 +315,14 @@ def plot_multiple_timesteps(simulation_dir, times, ts, ls, var, figure_propertie
         d = _ps.load_timestep_data(times[i], simulation_dir)
         
         # setup axes
-        ax = _plt.subplot(gs[i / ncol, i % ncol])
+        ax = _plt.subplot(gs[i // ncol, i % ncol])
         ax.set_aspect(figure_properties.aspect)
         ax.set_xlim(figure_properties.xlim)
         ax.set_ylim(figure_properties.ylim)
         ax.text(0.85, 0.85, 't = {0}'.format(round((d.SimTime * ts).value, 0)), horizontalalignment='center',
                verticalalignment='center',transform=ax.transAxes, color='white')
         
-        if (i/ncol) == 2:
+        if (i//ncol) == 2:
             ax.set_xlabel(figure_properties.xlabel)
         
         if (i%ncol) == 0:

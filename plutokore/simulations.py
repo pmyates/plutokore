@@ -1,10 +1,12 @@
-import jet as _jet
-import environments.makino as _NFW
+from __future__ import print_function
+from __future__ import absolute_import
+from . import jet as _jet
+from . import environments.makino as _NFW
 from astropy.convolution import convolve as _convolve
 from astropy.convolution import Box2DKernel as _Box2DKernel
 from contextlib2 import ExitStack as _ExitStack
 from contextlib import contextmanager as _contextmanager
-from helpers import suppress_stdout as _suppress_stdout
+from .helpers import suppress_stdout as _suppress_stdout
 import pyPLUTO as _pp
 import numpy as _np
 
@@ -317,7 +319,7 @@ def calculate_total_run_energy(run_directory, timesteps, theta_deg, initial_data
 def calculate_actual_jet_opening_angle(run_data, theta_deg):
     indicies = _np.where(run_data.x2 < _np.deg2rad(theta_deg))[0]
     if len(indicies) == 0:
-        return (range(0,len(run_data.x2-1)), theta_deg)
+        return (list(range(0,len(run_data.x2-1))), theta_deg)
     actual_angle = _np.rad2deg(run_data.x2[indicies[-1]])
     return (indicies, actual_angle)
 

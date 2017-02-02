@@ -1,3 +1,8 @@
+from __future__ import print_function
+from builtins import zip
+from builtins import str
+from builtins import object
+
 def nlast_info(w_dir=None,datatype=None):
 	""" Prints the information of the last step of the simulation as obtained from out files
 
@@ -37,12 +42,12 @@ def nlast_info(w_dir=None,datatype=None):
 	Dt = float(last_line[2])
 	Nstep = int(last_line[3])
 	    
-	print "------------TIME INFORMATION--------------"
-	print 'nlast =',nlast
-	print 'time  =',SimTime
-	print 'dt    =', Dt
-	print 'Nstep =',Nstep
-	print "-------------------------------------------"
+	print("------------TIME INFORMATION--------------")
+	print('nlast =',nlast)
+	print('time  =',SimTime)
+	print('dt    =', Dt)
+	print('Nstep =',Nstep)
+	print("-------------------------------------------")
 	    
 	return {'nlast':nlast,'time':SimTime,'dt':Dt,'Nstep':Nstep}
 
@@ -88,8 +93,8 @@ class pload(object):
         self.datatype = datatype
 
         if ((not hasH5) and (datatype == 'hdf5')):
-            print 'To read AMR hdf5 files with python'
-            print 'Please install h5py (Python HDF5 Reader)'
+            print('To read AMR hdf5 files with python')
+            print('Please install h5py (Python HDF5 Reader)')
             return
 
         self.level = level
@@ -197,28 +202,28 @@ class pload(object):
         self.n1_tot = self.n1 ; self.n2_tot = self.n2 ; self.n3_tot = self.n3
         if (self.x1range != None):
             self.n1_tot = self.n1
-            self.irange = range(abs(self.x1-self.x1range[0]).argmin(),abs(self.x1-self.x1range[1]).argmin()+1)
+            self.irange = list(range(abs(self.x1-self.x1range[0]).argmin(),abs(self.x1-self.x1range[1]).argmin()+1))
             self.n1  = len(self.irange)
             self.x1  = self.x1[self.irange]
             self.dx1 = self.dx1[self.irange]
         else:
-            self.irange = range(self.n1)
+            self.irange = list(range(self.n1))
         if (self.x2range != None):
             self.n2_tot = self.n2
-            self.jrange = range(abs(self.x2-self.x2range[0]).argmin(),abs(self.x2-self.x2range[1]).argmin()+1)
+            self.jrange = list(range(abs(self.x2-self.x2range[0]).argmin(),abs(self.x2-self.x2range[1]).argmin()+1))
             self.n2  = len(self.jrange)
             self.x2  = self.x2[self.jrange]
             self.dx2 = self.dx2[self.jrange]
         else:
-            self.jrange = range(self.n2)
+            self.jrange = list(range(self.n2))
         if (self.x3range != None):
             self.n3_tot = self.n3
-            self.krange = range(abs(self.x3-self.x3range[0]).argmin(),abs(self.x3-self.x3range[1]).argmin()+1)
+            self.krange = list(range(abs(self.x3-self.x3range[0]).argmin(),abs(self.x3-self.x3range[1]).argmin()+1))
             self.n3  = len(self.krange)
             self.x3  = self.x3[self.krange]
             self.dx3 = self.dx3[self.krange]
         else:
-            self.krange = range(self.n3)
+            self.krange = list(range(self.n3))
         self.Slice=(self.x1range != None) or (self.x2range != None) or (self.x3range != None)
 
 
@@ -287,7 +292,7 @@ class pload(object):
             if l == '':
                 break
         
-        vtkvardict = dict(zip(ks,vtkvar))
+        vtkvardict = dict(list(zip(ks,vtkvar)))
         return vtkvardict
             
     def DataScanHDF5(self, fp, myvars, ilev):
@@ -331,7 +336,7 @@ class pload(object):
                     elif (dim == 3):
                         zstr = fl.attrs.get('g_x3stretch')
                 except:
-                    print 'Old HDF5 file, not reading stretch and logr factors'
+                    print('Old HDF5 file, not reading stretch and logr factors')
                 freb[i] = 1
                 x1b = fl.attrs.get('domBeg1')
                 if (dim == 1):
@@ -381,16 +386,16 @@ class pload(object):
 	    
         ## Create uniform grids at the required level
         if logr == 0:
-            x1 = x1b + (ibeg+np.array(range(nx))+0.5)*dx
+            x1 = x1b + (ibeg+np.array(list(range(nx)))+0.5)*dx
         else:
-            x1 = x1b*(exp((ibeg+np.array(range(nx))+1)*dx)+exp((ibeg+np.array(range(nx)))*dx))*0.5
+            x1 = x1b*(exp((ibeg+np.array(list(range(nx)))+1)*dx)+exp((ibeg+np.array(list(range(nx))))*dx))*0.5
         
-        x2 = x2b + (jbeg+np.array(range(ny))+0.5)*dx*ystr
-        x3 = x3b + (kbeg+np.array(range(nz))+0.5)*dx*zstr
+        x2 = x2b + (jbeg+np.array(list(range(ny)))+0.5)*dx*ystr
+        x3 = x3b + (kbeg+np.array(list(range(nz)))+0.5)*dx*zstr
         if logr == 0:
             dx1 = np.ones(nx)*dx
         else:
-            dx1 = x1b*(exp((ibeg+np.array(range(nx))+1)*dx)-exp((ibeg+np.array(range(nx)))*dx))
+            dx1 = x1b*(exp((ibeg+np.array(list(range(nx)))+1)*dx)-exp((ibeg+np.array(list(range(nx))))*dx))
         dx2 = np.ones(ny)*dx*ystr
         dx3 = np.ones(nz)*dx*zstr
 
@@ -419,12 +424,12 @@ class pload(object):
             boxes = fl['boxes']
             nbox = len(boxes['lo_i'])
             AMRLevel[i]['nbox'] = nbox
-            ncount = 0L
+            ncount = 0
             AMRLevel[i]['box']=[]
             for j in range(nbox): # loop on all boxes of a given level
-                AMRLevel[i]['box'].append({'x0':0.,'x1':0.,'ib':0L,'ie':0L,\
-                                           'y0':0.,'y1':0.,'jb':0L,'je':0L,\
-                                           'z0':0.,'z1':0.,'kb':0L,'ke':0L})
+                AMRLevel[i]['box'].append({'x0':0.,'x1':0.,'ib':0,'ie':0,\
+                                           'y0':0.,'y1':0.,'jb':0,'je':0,\
+                                           'z0':0.,'z1':0.,'kb':0,'ke':0})
                 # Box indexes
                 ib = boxes[j]['lo_i'] ; ie = boxes[j]['hi_i'] ; nbx = ie-ib+1
                 jb = 0 ; je = 0 ; nby = 1
@@ -574,7 +579,7 @@ class pload(object):
         else:
             fp = open(datafilename, "rb")
         
-        print "Reading Data file : %s"%datafilename
+        print("Reading Data file : %s"%datafilename)
         
         if self.datatype == 'vtk':
             vtkd = self.DataScanVTK(fp, n1, n2, n3, endian, dtype)
@@ -691,8 +696,8 @@ class pload(object):
             self.ReadMultipleFiles(nstr, dataext, self.vars, self.n1, self.n2,
                                    self.n3, endian, dtype, ddict)
         else:
-            print "Wrong file type : CHECK pluto.ini for file type."
-            print "Only supported are .dbl, .flt, .vtk, .hdf5"
+            print("Wrong file type : CHECK pluto.ini for file type.")
+            print("Only supported are .dbl, .flt, .vtk, .hdf5")
             sys.exit()
 
         return ddict

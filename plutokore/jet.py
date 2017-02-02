@@ -1,8 +1,9 @@
+from builtins import object
 import numpy as _np
 import astropy.units as _u
 from tabulate import tabulate as _tabulate
 
-class AstroJet:
+class AstroJet(object):
     """Basic class for calculating relevant astrophyiscal jet quantities, as shown in Krause+ (2012) and Alexander (2006)"""
     
     def __init__(self, opening_angle, ext_mach_number, ext_sound_speed, ext_density, jet_power, gamma):

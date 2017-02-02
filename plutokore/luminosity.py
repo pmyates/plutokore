@@ -1,5 +1,6 @@
+from __future__ import absolute_import
 import astropy.units as _u
-import simulations as _ps
+from . import simulations as _ps
 import numpy as _np
 from scipy import special as _sp
 from astropy import constants as _const
