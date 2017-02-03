@@ -21,6 +21,10 @@ requirements:
         - tabulate
         - contextlib2
 
+test:
+    imports:
+        - plutokore
+
 about:
     home: https://github.com/opcon/plutokore
     license: MIT

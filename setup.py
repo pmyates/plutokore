@@ -10,7 +10,9 @@ setup(
     url='https://github.com/opcon/plutokore',
     keywords=['pluto', 'astrophsyics'],
     license='MIT',
-    requires=['numpy', 'matplotlib', 'tabulate'],
+    requires=['numpy', 'matplotlib', 'tabulate', 'astropy'],
+    setup_requires=['pytest-runner'],
+    test_requires=['pytest'],
     classifiers=[
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.3',

@@ -1,13 +1,13 @@
 from __future__ import print_function
 from __future__ import absolute_import
 from . import jet as _jet
+from . import io as _io
 from .environments import makino as _NFW
 from astropy.convolution import convolve as _convolve
 from astropy.convolution import Box2DKernel as _Box2DKernel
 from contextlib2 import ExitStack as _ExitStack
 from contextlib import contextmanager as _contextmanager
 from .helpers import suppress_stdout as _suppress_stdout
-import pyPLUTO as _pp
 import numpy as _np
 
 
@@ -17,13 +17,13 @@ def LoadSimulationData(ids, directory, suppress_output=None):
         if suppress_output in [None, True]:
             stack.enter_context(_suppress_stdout())
         for i in ids:
-            data.append(_pp.pload(i, w_dir=directory))
+            data.append(_io.pload(i, w_dir=directory))
     return data
 
 
 def get_nlast_info(directory):
     with _suppress_stdout():
-        return _pp.nlast_info(w_dir=directory)
+        return _io.nlast_info(w_dir=directory)
 
 
 def get_output_count(directory):
@@ -43,7 +43,7 @@ def load_timestep_data(timestep, directory, suppress_output=None):
     with _ExitStack() as stack:
         if suppress_output in [None, True]:
             stack.enter_context(_suppress_stdout())
-            return _pp.pload(timestep, w_dir=directory)
+            return _io.pload(timestep, w_dir=directory)
 
 
 def load_simulation_variables(ids, directory, var_list, suppress_output=None):
@@ -62,7 +62,7 @@ def LoadSimulationTimes(run_directory, run_timesteps):
     times = []
     for i in run_timesteps:
         with _suppress_stdout():
-            energy_data = _pp.pload(i, w_dir=run_directory)
+            energy_data = _io.pload(i, w_dir=run_directory)
         times.append(energy_data.SimTime)
     return times
 

@@ -1,7 +1,7 @@
 import os as _os
 import sys as _sys
 import numpy as _np
-import pyPLUTO as _pp
+from . import io as _io
 from IPython.display import display as _display
 from IPython.display import Markdown as _Markdown
 from contextlib import contextmanager as _contextmanager
@@ -83,7 +83,7 @@ def savefig(filename, fig, dpi=300):
 
 def get_last_timestep(simulation_directory):
     with suppress_stdout():
-        return _pp.nlast_info(w_dir=simulation_directory)['nlast']
+        return _io.nlast_info(w_dir=simulation_directory)['nlast']
 
 
 UnitValues = _namedtuple(

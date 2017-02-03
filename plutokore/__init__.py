@@ -7,7 +7,8 @@ from . import luminosity
 from . import plotting
 from . import simulations
 from . import helpers
+from . import io
 
 __all__ = [
-    'environments', 'luminosity', 'plotting', 'simulations', 'jet', 'helpers'
+    'environments', 'luminosity', 'plotting', 'simulations', 'jet', 'helpers', 'io',
 ]
