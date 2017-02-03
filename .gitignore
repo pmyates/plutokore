@@ -92,3 +92,4 @@ ENV/
 
 # Vim stuff
 .cs_files
+*.swp
