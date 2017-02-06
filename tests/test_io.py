@@ -13,7 +13,7 @@ PLUTO_FIXTURE_DIR = os.path.join(
 )
 def test_load_data_file(datafiles):
     assert len(datafiles.listdir()) == 1
-    path = datafiles.listdir()[0]
+    path = str(datafiles.listdir()[0])
     data = io.pload(0, w_dir=path)
 
     # assert we have 4 tracer variables
@@ -36,7 +36,7 @@ def test_load_data_file(datafiles):
 )
 def test_load_pluto_times(datafiles, tmpdir):
     assert len(datafiles.listdir()) == 1
-    path = datafiles.listdir()[0]
+    path = str(datafiles.listdir()[0])
     info = io.nlast_info(w_dir=path)
     assert info['nlast'] == 1003
     assert info['time'] - 24.0 < 0.01

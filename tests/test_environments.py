@@ -87,4 +87,5 @@ def test_default_conc_method():
 
 def test_get_king_density(king_env):
     from astropy import units as u
-    king_env.get_density(1 * u.Mpc)
+    d = king_env.get_density(1 * u.Mpc)
+    assert d > 0
