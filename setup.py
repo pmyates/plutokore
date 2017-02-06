@@ -12,7 +12,7 @@ setup(
     license='MIT',
     requires=['numpy', 'matplotlib', 'tabulate', 'astropy'],
     setup_requires=['pytest-runner'],
-    test_requires=['pytest'],
+    tests_require=['pytest', 'pytest-datafiles'],
     classifiers=[
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.3',
