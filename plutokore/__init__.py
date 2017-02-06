@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 from .environments.makino import MakinoProfile
 from .environments.king import KingProfile
 from .jet import AstroJet

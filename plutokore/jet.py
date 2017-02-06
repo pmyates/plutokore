@@ -66,7 +66,7 @@ class AstroJet(object):
     def get_v_jet(self):
         return self.M_x * self.c_x
 
-    def calculate_Q():
+    def calculate_Q(self):
         return ((1.0 / 8.0) * self.M_x**3 * self.L_1**2 * self.rho_0 * self.c_x
                 **3).to(_u.W)
 

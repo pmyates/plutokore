@@ -56,13 +56,6 @@ def nlast_info(w_dir=None, datatype=None):
     Dt = float(last_line[2])
     Nstep = int(last_line[3])
 
-    print("------------TIME INFORMATION--------------")
-    print('nlast =', nlast)
-    print('time  =', SimTime)
-    print('dt    =', Dt)
-    print('Nstep =', Nstep)
-    print("-------------------------------------------")
-
     return {'nlast': nlast, 'time': SimTime, 'dt': Dt, 'Nstep': Nstep}
 
 
@@ -115,8 +108,7 @@ class pload(object):
         self.datatype = datatype
 
         if ((not hasH5) and (datatype == 'hdf5')):
-            print('To read AMR hdf5 files with python')
-            print('Please install h5py (Python HDF5 Reader)')
+            raise Exception('The h5py library is required to load .hdf5 files')
             return
 
         self.level = level
@@ -697,8 +689,6 @@ class pload(object):
         else:
             fp = open(datafilename, "rb")
 
-        print("Reading Data file : %s" % datafilename)
-
         if self.datatype == 'vtk':
             vtkd = self.DataScanVTK(fp, n1, n2, n3, endian, dtype)
             ddict.update(vtkd)
@@ -821,8 +811,6 @@ class pload(object):
             self.ReadMultipleFiles(nstr, dataext, self.vars, self.n1, self.n2,
                                    self.n3, endian, dtype, ddict)
         else:
-            print("Wrong file type : CHECK pluto.ini for file type.")
-            print("Only supported are .dbl, .flt, .vtk, .hdf5")
-            sys.exit()
+            raise Exception('Wrong file type {0}, check pluto.ini for filetype.')
 
         return ddict

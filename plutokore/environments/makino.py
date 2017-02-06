@@ -49,7 +49,7 @@ class MakinoProfile(object):
         self.gamma = gamma
 
         if concentration_method is None:
-            concentration_method = 'klypin'
+            concentration_method = 'klypin-planck-relaxed'
 
         self.critical_density = self.calculate_critical_density(
             self.redshift, cosmo=self.cosmo)
@@ -200,6 +200,8 @@ class MakinoProfile(object):
             logc = zero_maccio + slope_maccio * (_np.log10(virial_mass / (
                 _u.M_sun * (1.0 / cosmo.h))) - 12)
             c = 10**logc
+        else:
+            raise ValueError('Unknown concentration method chosen')
         return c
 
     @staticmethod

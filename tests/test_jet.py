@@ -19,3 +19,9 @@ def test_jet_creation_king(king_env):
 
 def test_calculate_length_scales(astro_jet):
     astro_jet.calculate_length_scales()
+
+def test_get_q(astro_jet):
+    astro_jet.calculate_Q()
+
+def test_get_param_table(astro_jet):
+    astro_jet.get_calculated_parameter_table()
