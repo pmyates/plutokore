@@ -2,7 +2,17 @@ from __future__ import print_function
 from builtins import zip
 from builtins import str
 from builtins import object
+import os as _os
+import numpy as _np
+import array as _array
 
+
+# check if we have h5py available
+try:
+    import h5py as h5
+    hasH5 = True
+except ImportError:
+    hasH5 = False
 
 def nlast_info(w_dir=None, datatype=None):
     """ Prints the information of the last step of the simulation as obtained from out files
@@ -31,13 +41,16 @@ def nlast_info(w_dir=None, datatype=None):
 	  ``A = pp.nlast_info(w_dir=wdir,datatype='float')``	
 	"""
     if w_dir is None: w_dir = curdir()
+    # ensure trailing slash exists on directory path
+    w_dir = _os.path.join(w_dir, '')
     if datatype == 'float':
         fname_v = w_dir + "flt.out"
     elif datatype == 'vtk':
         fname_v = w_dir + "vtk.out"
     else:
         fname_v = w_dir + "dbl.out"
-    last_line = file(fname_v, "r").readlines()[-1].split()
+    with open(fname_v, 'r') as f:
+        last_line = f.readlines()[-1].split()
     nlast = int(last_line[0])
     SimTime = float(last_line[1])
     Dt = float(last_line[2])
@@ -110,6 +123,8 @@ class pload(object):
 
         if w_dir is None:
             w_dir = os.getcwd() + '/'
+        # make sure w_dir has a trailing path separator
+        w_dir = _os.path.join(w_dir, '')
         self.wdir = w_dir
 
         Data_dictionary = self.ReadDataFile(self.NStepStr)
@@ -197,13 +212,13 @@ class pload(object):
         n1 = self.n1
         n1p2 = self.n1 + self.n2
         n1p2p3 = self.n1 + self.n2 + self.n3
-        self.x1 = np.asarray([0.5 * (xL[i] + xR[i]) for i in range(n1)])
-        self.dx1 = np.asarray([(xR[i] - xL[i]) for i in range(n1)])
-        self.x2 = np.asarray([0.5 * (xL[i] + xR[i]) for i in range(n1, n1p2)])
-        self.dx2 = np.asarray([(xR[i] - xL[i]) for i in range(n1, n1p2)])
-        self.x3 = np.asarray(
+        self.x1 = _np.asarray([0.5 * (xL[i] + xR[i]) for i in range(n1)])
+        self.dx1 = _np.asarray([(xR[i] - xL[i]) for i in range(n1)])
+        self.x2 = _np.asarray([0.5 * (xL[i] + xR[i]) for i in range(n1, n1p2)])
+        self.dx2 = _np.asarray([(xR[i] - xL[i]) for i in range(n1, n1p2)])
+        self.x3 = _np.asarray(
             [0.5 * (xL[i] + xR[i]) for i in range(n1p2, n1p2p3)])
-        self.dx3 = np.asarray([(xR[i] - xL[i]) for i in range(n1p2, n1p2p3)])
+        self.dx3 = _np.asarray([(xR[i] - xL[i]) for i in range(n1p2, n1p2p3)])
 
         # Stores the total number of points in '_tot' variable in case only
         # a portion of the domain is loaded. Redefine the x and dx arrays
@@ -249,13 +264,13 @@ class pload(object):
 
         # Create the xr arrays containing the edges positions
         # Useful for pcolormesh which should use those
-        self.x1r = np.zeros(len(self.x1) + 1)
+        self.x1r = _np.zeros(len(self.x1) + 1)
         self.x1r[1:] = self.x1 + self.dx1 / 2.0
         self.x1r[0] = self.x1r[1] - self.dx1[0]
-        self.x2r = np.zeros(len(self.x2) + 1)
+        self.x2r = _np.zeros(len(self.x2) + 1)
         self.x2r[1:] = self.x2 + self.dx2 / 2.0
         self.x2r[0] = self.x2r[1] - self.dx2[0]
-        self.x3r = np.zeros(len(self.x3) + 1)
+        self.x3r = _np.zeros(len(self.x3) + 1)
         self.x3r[1:] = self.x3 + self.dx3 / 2.0
         self.x3r[0] = self.x3r[1] - self.dx3[0]
 
@@ -296,13 +311,13 @@ class pload(object):
                 if l.split()[0] == 'SCALARS':
                     ks.append(l.split()[1])
                 elif l.split()[0] == 'LOOKUP_TABLE':
-                    A = array.array(dtype)
+                    A = _array.array(dtype)
                     fmt = endian + str(n1 * n2 * n3) + dtype
-                    nb = np.dtype(fmt).itemsize
+                    nb = _np.dtype(fmt).itemsize
                     A.fromstring(fp.read(nb))
                     if (self.Slice):
-                        darr = np.zeros((n1 * n2 * n3))
-                        indxx = np.sort([
+                        darr = _np.zeros((n1 * n2 * n3))
+                        indxx = _np.sort([
                             n3_tot * n2_tot * k + j * n2_tot + i
                             for i in self.irange for j in self.jrange
                             for k in self.krange
@@ -313,9 +328,9 @@ class pload(object):
                             darr[ii] = A[iii]
                         vtkvar_buf = [darr]
                     else:
-                        vtkvar_buf = np.frombuffer(A, dtype=np.dtype(fmt))
+                        vtkvar_buf = _np.frombuffer(A, dtype=_np.dtype(fmt))
                     vtkvar.append(
-                        np.reshape(vtkvar_buf, self.nshp).transpose())
+                        _np.reshape(vtkvar_buf, self.nshp).transpose())
                 else:
                     pass
             if l == '':
@@ -349,7 +364,7 @@ class pload(object):
         lev = []
         for i in range(nlev):
             lev.append('level_' + str(i))
-        freb = np.zeros(nlev, dtype='int')
+        freb = _np.zeros(nlev, dtype='int')
         for i in range(il + 1)[::-1]:
             fl = fp[lev[i]]
             if (i == il):
@@ -442,31 +457,31 @@ class pload(object):
 
         ## Create uniform grids at the required level
         if logr == 0:
-            x1 = x1b + (ibeg + np.array(list(range(nx))) + 0.5) * dx
+            x1 = x1b + (ibeg + _np.array(list(range(nx))) + 0.5) * dx
         else:
-            x1 = x1b * (exp((ibeg + np.array(list(range(nx))) + 1) * dx) + exp(
-                (ibeg + np.array(list(range(nx)))) * dx)) * 0.5
+            x1 = x1b * (exp((ibeg + _np.array(list(range(nx))) + 1) * dx) + exp(
+                (ibeg + _np.array(list(range(nx)))) * dx)) * 0.5
 
-        x2 = x2b + (jbeg + np.array(list(range(ny))) + 0.5) * dx * ystr
-        x3 = x3b + (kbeg + np.array(list(range(nz))) + 0.5) * dx * zstr
+        x2 = x2b + (jbeg + _np.array(list(range(ny))) + 0.5) * dx * ystr
+        x3 = x3b + (kbeg + _np.array(list(range(nz))) + 0.5) * dx * zstr
         if logr == 0:
-            dx1 = np.ones(nx) * dx
+            dx1 = _np.ones(nx) * dx
         else:
             dx1 = x1b * (exp(
-                (ibeg + np.array(list(range(nx))) + 1) * dx) - exp(
-                    (ibeg + np.array(list(range(nx)))) * dx))
-        dx2 = np.ones(ny) * dx * ystr
-        dx3 = np.ones(nz) * dx * zstr
+                (ibeg + _np.array(list(range(nx))) + 1) * dx) - exp(
+                    (ibeg + _np.array(list(range(nx)))) * dx))
+        dx2 = _np.ones(ny) * dx * ystr
+        dx3 = _np.ones(nz) * dx * zstr
 
         # Create the xr arrays containing the edges positions
         # Useful for pcolormesh which should use those
-        x1r = np.zeros(len(x1) + 1)
+        x1r = _np.zeros(len(x1) + 1)
         x1r[1:] = x1 + dx1 / 2.0
         x1r[0] = x1r[1] - dx1[0]
-        x2r = np.zeros(len(x2) + 1)
+        x2r = _np.zeros(len(x2) + 1)
         x2r[1:] = x2 + dx2 / 2.0
         x2r[0] = x2r[1] - dx2[0]
-        x3r = np.zeros(len(x3) + 1)
+        x3r = _np.zeros(len(x3) + 1)
         x3r[1:] = x3 + dx3 / 2.0
         x3r[0] = x3r[1] - dx3[0]
         NewGridDict = dict([('n1',nx),('n2',ny),('n3',nz),\
@@ -477,7 +492,7 @@ class pload(object):
 
         # Variables table
         nvar = len(myvars)
-        vars = np.zeros((nx, ny, nz, nvar))
+        vars = _np.zeros((nx, ny, nz, nvar))
 
         LevelDic = {
             'nbox': 0,
@@ -489,7 +504,7 @@ class pload(object):
             'kend': kend
         }
         AMRLevel = []
-        AMRBoxes = np.zeros((nx, ny, nz))
+        AMRBoxes = _np.zeros((nx, ny, nz))
         for i in range(il + 1):
             AMRLevel.append(LevelDic.copy())
             fl = fp[lev[i]]
@@ -576,7 +591,7 @@ class pload(object):
                     cje0 = (je0 - jb) / freb[i]
                     ckb0 = (kb0 - kb) / freb[i]
                     cke0 = (ke0 - kb) / freb[i]
-                    q1 = np.zeros((cie0 - cib0 + 1, cje0 - cjb0 + 1,
+                    q1 = _np.zeros((cie0 - cib0 + 1, cje0 - cjb0 + 1,
                                    cke0 - ckb0 + 1, nvar))
                     q1 = q[cib0:cie0 + 1, cjb0:cje0 + 1, ckb0:cke0 + 1, :]
 
@@ -629,21 +644,21 @@ class pload(object):
 	"""
         if off is not None:
             off_fmt = endian + str(off) + dtype
-            nboff = np.dtype(off_fmt).itemsize
+            nboff = _np.dtype(off_fmt).itemsize
             fp.read(nboff)
 
         n1_tot = self.n1_tot
         n2_tot = self.n2_tot
         n3_tot = self.n3_tot
 
-        A = array.array(dtype)
+        A = _array.array(dtype)
         fmt = endian + str(n1_tot * n2_tot * n3_tot) + dtype
-        nb = np.dtype(fmt).itemsize
+        nb = _np.dtype(fmt).itemsize
         A.fromstring(fp.read(nb))
 
         if (self.Slice):
-            darr = np.zeros((n1 * n2 * n3))
-            indxx = np.sort([
+            darr = _np.zeros((n1 * n2 * n3))
+            indxx = _np.sort([
                 n3_tot * n2_tot * k + j * n2_tot + i
                 for i in self.irange for j in self.jrange for k in self.krange
             ])
@@ -653,9 +668,9 @@ class pload(object):
                 darr[ii] = A[iii]
             darr = [darr]
         else:
-            darr = np.frombuffer(A, dtype=np.dtype(fmt))
+            darr = _np.frombuffer(A, dtype=_np.dtype(fmt))
 
-        return np.reshape(darr[0], self.nshp).transpose()
+        return _np.reshape(darr[0], self.nshp).transpose()
 
     def ReadSingleFile(self, datafilename, myvars, n1, n2, n3, endian, dtype,
                        ddict):

@@ -3,7 +3,7 @@ from astropy import units as u
 from astropy import cosmology
 from plutokore import jet
 
-pytest_plugins = 'pytest_datadir_ng'
+pytest_plugins = 'pytest_datafiles'
 
 @pytest.fixture(params=[12.5, 14.5])
 def makino_env(request):
