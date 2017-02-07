@@ -11,7 +11,7 @@ from collections import namedtuple as _namedtuple
 
 
 # Define some helper functions
-def video(fname, mimetype): #pragma: no cover
+def video(fname, mimetype):  #pragma: no cover
     from IPython.display import HTML
     video_encoded = open(fname, "rb").read().encode("base64")
     video_tag = '<video autoplay controls alt="test" src="data:video/{0};base64,{1}">'.format(
@@ -37,7 +37,7 @@ def create_colorbar(im,
                     padding=0.05,
                     position='right',
                     divider=None,
-                    use_ax=False): #pragma: no cover
+                    use_ax=False):  #pragma: no cover
     if use_ax is False:
         if divider is None:
             divider = _make_axes_locatable(ax)
@@ -76,7 +76,7 @@ def newfig(width, ratio=None):
     return fig, ax
 
 
-def savefig(filename, fig, dpi=300): #pragma: no cover
+def savefig(filename, fig, dpi=300):  #pragma: no cover
     fig.savefig('./Images/thesis/{}.pgf'.format(filename), dpi=dpi)
     fig.savefig('./Images/thesis/{}.pdf'.format(filename), dpi=dpi)
 
@@ -112,7 +112,7 @@ def get_unit_values(environment, jet):
         speed=unit_speed)
 
 
-def close_open_hdf5_files(): #pragma: no cover
+def close_open_hdf5_files():  #pragma: no cover
     import gc
     import h5py
     for obj in gc.get_objects():  # Browse through ALL objects

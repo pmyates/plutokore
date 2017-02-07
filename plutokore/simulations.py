@@ -120,8 +120,9 @@ def calculate_cell_volume(sim_data):
     for i in range(0, cell_volumes.shape[0]):
         r = (sim_data.x1r[i + 1]**3) - (sim_data.x1r[i]**3)
         for j in range(0, cell_volumes.shape[1]):
-            volume = 2 * _np.pi * (_np.cos(sim_data.x2r[j]) -
-                                   _np.cos(sim_data.x2r[j + 1])) * (r / 3)
+            volume = 2 * _np.pi * (
+                _np.cos(sim_data.x2r[j]) - _np.cos(sim_data.x2r[j + 1])) * (r /
+                                                                            3)
             cell_volumes[i, j] = volume
     return cell_volumes
 

@@ -11,6 +11,6 @@ py3-lint :
 	pylint --py3k ./plutokore
 
 yapf : 
-	yapf -d --recursive ./plutokore
+	yapf -ip --style pep8 --recursive ./plutokore
 
 .PHONY: test

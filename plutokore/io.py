@@ -6,13 +6,13 @@ import os as _os
 import numpy as _np
 import array as _array
 
-
 # check if we have h5py available
 try:
     import h5py as h5
     hasH5 = True
 except ImportError:
     hasH5 = False
+
 
 def nlast_info(w_dir=None, datatype=None):
     """ Prints the information of the last step of the simulation as obtained from out files
@@ -451,8 +451,9 @@ class pload(object):
         if logr == 0:
             x1 = x1b + (ibeg + _np.array(list(range(nx))) + 0.5) * dx
         else:
-            x1 = x1b * (exp((ibeg + _np.array(list(range(nx))) + 1) * dx) + exp(
-                (ibeg + _np.array(list(range(nx)))) * dx)) * 0.5
+            x1 = x1b * (exp(
+                (ibeg + _np.array(list(range(nx))) + 1) * dx) + exp(
+                    (ibeg + _np.array(list(range(nx)))) * dx)) * 0.5
 
         x2 = x2b + (jbeg + _np.array(list(range(ny))) + 0.5) * dx * ystr
         x3 = x3b + (kbeg + _np.array(list(range(nz))) + 0.5) * dx * zstr
@@ -584,7 +585,7 @@ class pload(object):
                     ckb0 = (kb0 - kb) / freb[i]
                     cke0 = (ke0 - kb) / freb[i]
                     q1 = _np.zeros((cie0 - cib0 + 1, cje0 - cjb0 + 1,
-                                   cke0 - ckb0 + 1, nvar))
+                                    cke0 - ckb0 + 1, nvar))
                     q1 = q[cib0:cie0 + 1, cjb0:cje0 + 1, ckb0:cke0 + 1, :]
 
                     # Remap the extracted portion
@@ -811,6 +812,7 @@ class pload(object):
             self.ReadMultipleFiles(nstr, dataext, self.vars, self.n1, self.n2,
                                    self.n3, endian, dtype, ddict)
         else:
-            raise Exception('Wrong file type {0}, check pluto.ini for filetype.')
+            raise Exception(
+                'Wrong file type {0}, check pluto.ini for filetype.')
 
         return ddict
