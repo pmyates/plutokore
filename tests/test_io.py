@@ -4,13 +4,11 @@ from plutokore import io
 
 PLUTO_FIXTURE_DIR = os.path.join(
     os.path.dirname(os.path.realpath(__file__)),
-    'data',
-)
+    'data', )
+
 
 @pytest.mark.datafiles(
-    os.path.join(PLUTO_FIXTURE_DIR, 'pluto'),
-    keep_top_dir = True
-)
+    os.path.join(PLUTO_FIXTURE_DIR, 'pluto'), keep_top_dir=True)
 def test_load_data_file(datafiles):
     assert len(datafiles.listdir()) == 1
     path = str(datafiles.listdir()[0])
@@ -30,10 +28,9 @@ def test_load_data_file(datafiles):
     # check simulation time
     assert data.SimTime == 0.0
 
+
 @pytest.mark.datafiles(
-    os.path.join(PLUTO_FIXTURE_DIR, 'pluto'),
-    keep_top_dir = True
-)
+    os.path.join(PLUTO_FIXTURE_DIR, 'pluto'), keep_top_dir=True)
 def test_load_pluto_times(datafiles, tmpdir):
     assert len(datafiles.listdir()) == 1
     path = str(datafiles.listdir()[0])

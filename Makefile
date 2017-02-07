@@ -12,5 +12,6 @@ py3-lint :
 
 yapf : 
 	yapf -ip --style pep8 --recursive ./plutokore
+	yapf -ip --style pep8 --recursive ./tests
 
 .PHONY: test
