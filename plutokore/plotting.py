@@ -45,7 +45,7 @@ def get_animation(simulation_directory,
                   simulation_directory2=None,
                   draw_timebar=True,
                   draw_function=None,
-                  length_scaling2=None):
+                  length_scaling2=None):  #pragma: no cover
 
     from matplotlib import pyplot as _plt
 
@@ -335,7 +335,7 @@ def plot_energy(simulation_directory,
                 height=10,
                 energy_scaling=1 * _u.J,
                 draw_legend=True,
-                draw_title=True):
+                draw_title=True):  #pragma: no cover
 
     from matplotlib import pyplot as _plt
 
@@ -415,7 +415,7 @@ def plot_multiple_timesteps(simulation_dir,
                             ncol=5,
                             log=True,
                             colorbar=True,
-                            vs=1):
+                            vs=1):  #pragma: no cover
 
     from matplotlib import pyplot as _plt
 
