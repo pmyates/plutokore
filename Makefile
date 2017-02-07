@@ -7,4 +7,10 @@ coverage-run :
 coverage : coverage-run
 	coverage report
 
+py3-lint : 
+	pylint --py3k ./plutokore
+
+yapf : 
+	yapf -d --recursive ./plutokore
+
 .PHONY: test

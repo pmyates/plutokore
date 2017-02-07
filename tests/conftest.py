@@ -13,6 +13,14 @@ def makino_env(request):
     z = 0
     return MakinoProfile(mass, z, delta_vir=200, cosmo=cosmology.Planck15, concentration_method='klypin-planck-relaxed')
 
+@pytest.fixture()
+def makino_env_12p5():
+    from plutokore.environments.makino import MakinoProfile
+
+    mass = (10 ** 12.5) * u.M_sun
+    z = 0
+    return MakinoProfile(mass, z, delta_vir=200, cosmo=cosmology.Planck15, concentration_method='klypin-planck-relaxed')
+
 @pytest.fixture(params=[12.5, 14.5])
 def king_env(request):
     from plutokore.environments.king import KingProfile
@@ -27,3 +35,10 @@ def astro_jet(makino_env):
     M_x = 25
     Q = 1e37 * u.W
     return jet.AstroJet(theta_deg, M_x, makino_env.sound_speed, makino_env.central_density, Q, makino_env.gamma)
+
+@pytest.fixture()
+def jet_12p5(makino_env_12p5):
+    theta_deg = 15
+    M_x = 25
+    Q = 1e37 * u.W
+    return jet.AstroJet(theta_deg, M_x, makino_env_12p5.sound_speed, makino_env_12p5.central_density, Q, makino_env_12p5.gamma)
