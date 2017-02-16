@@ -7,6 +7,7 @@ from . import plotting
 from . import simulations
 from . import helpers
 from . import io
+from . import configuration
 
 __all__ = [
     'environments',
@@ -16,4 +17,5 @@ __all__ = [
     'jet',
     'helpers',
     'io',
+    'configuration',
 ]
