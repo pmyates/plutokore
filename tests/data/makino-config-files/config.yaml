@@ -1,0 +1,18 @@
+environment-properties:
+    concentration-profile: klypin-relaxed
+    cosmology: planck
+    halo-mass-exponent: 14.5
+    profile: makino
+    redshift: 0
+intermittent-properties:
+    outburst-count: 4
+jet-properties:
+    mach-number: 25.0
+    opening-angle-degrees: 15.0
+    power-exponent: 37
+simulation-properties:
+    dimensions: 2
+    geometry: SPHERICAL
+    jet-active-time-myrs: 40
+    name: m14.5-M25-n4
+    total-time-myrs: 200
