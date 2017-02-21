@@ -42,6 +42,7 @@ def test_create_yaml_template_makino(datafiles):
     definition_file = os.path.join(path, 'definitions.h')
 
     configuration.create_sim_yaml_file_template(yaml_file, ini_file, definition_file)
+    configuration.validate_yaml_keys(yaml_file)
 
 @pytest.mark.datafiles(
     os.path.join(PLUTO_FIXTURE_DIR, 'king-config-files'), keep_top_dir=True)

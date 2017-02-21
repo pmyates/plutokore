@@ -16,3 +16,4 @@ simulation-properties:
     jet-active-time-myrs: 40
     name: m14.5-M25-n4
     total-time-myrs: 200
+    tracer-count: 4

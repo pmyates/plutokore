@@ -32,7 +32,8 @@ def create_sim_yaml_file_template(yaml_file, ini_file, definition_file):
             'total-time-myrs': default,
             'jet-active-time-myrs': default,
             'geometry': definition_data['GEOMETRY'],
-            'dimensions': int(definition_data['DIMENSIONS'])
+            'dimensions': int(definition_data['DIMENSIONS']),
+            'tracer-count': int(definition_data['NTRACER'])
         },
         'intermittent-properties': {
             'outburst-count': int(ini_data['Parameters'].getfloat('jet_episodes'))
@@ -181,6 +182,7 @@ def validate_yaml_with_definitions(yaml_file, definition_file):
     sp = 'simulation-properties'
     geom = 'GEOMETRY'
     dim = 'DIMENSIONS'
+    ntrc = 'NTRACER'
 
     # load the files
     yaml_data = read_sim_yaml_file(yaml_file)
@@ -192,20 +194,23 @@ def validate_yaml_with_definitions(yaml_file, definition_file):
     # check dimensions matches
     assert yaml_data[sp]['dimensions'] == int(definitions_data[dim]), 'Dimensions in definitions.h does not match dimensions in yaml'
 
+    # check tracer count matches
+    assert yaml_data[sp]['tracer-count'] == int(definitions_data[ntrc]), 'Tracer count in definitions.h does not match tracer count in yaml'
+
 def validate_yaml_keys(yaml_file):
     """Validates the keys in the given yaml file"""
 
     base_keys = ('environment-properties', 'jet-properties', 'simulation-properties')
     e_keys = ('profile', 'concentration-profile', 'cosmology', 'halo-mass-exponent', 'redshift')
     j_keys = ('mach-number', 'power-exponent', 'opening-angle-degrees')
-    s_keys = ('name', 'total-time-myrs', 'jet-active-time-myrs', 'geometry', 'dimensions')
+    s_keys = ('name', 'total-time-myrs', 'jet-active-time-myrs', 'geometry', 'dimensions', 'tracer-count')
     i_keys = ('outburst-count',)
     extra_keys = ('intermittent-properties')
 
     data = read_sim_yaml_file(yaml_file)
 
     for k in base_keys:
-        assert k in data, '{0} not in {1}'.format(k, data)
+        assert k in data
     for k in e_keys:
         assert k in data['environment-properties']
     for k in j_keys:
