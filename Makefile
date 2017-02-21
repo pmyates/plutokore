@@ -5,7 +5,7 @@ test-all :
 	python setup.py test --addopts '--runslow'
 
 coverage-run :
-	coverage run setup.py test-all
+	coverage run setup.py test --addopts '--runslow'
 
 coverage : coverage-run
 	coverage report
