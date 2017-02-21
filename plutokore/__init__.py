@@ -2,7 +2,7 @@ from .environments.makino import MakinoProfile
 from .environments.king import KingProfile
 from .jet import AstroJet
 
-from . import luminosity
+from . import radio
 from . import plotting
 from . import simulations
 from . import helpers
@@ -11,7 +11,7 @@ from . import configuration
 
 __all__ = [
     'environments',
-    'luminosity',
+    'radio',
     'plotting',
     'simulations',
     'jet',
