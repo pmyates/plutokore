@@ -5,6 +5,9 @@ from plutokore import jet
 
 pytest_plugins = 'pytest_datafiles'
 
+def pytest_addoption(parser):
+    parser.addoption('--runslow', action='store_true',
+                     help='run slow tests')
 
 @pytest.fixture(params=[12.5, 14.5])
 def makino_env(request):

@@ -2,6 +2,13 @@ import pytest
 import os
 from plutokore import luminosity
 
+slow = pytest.mark.skipif(
+    not pytest.config.getoption('--runslow'),
+    reason='need --runslow option to run'
+)
+
+pytestmark = slow
+
 PLUTO_FIXTURE_DIR = os.path.join(
     os.path.dirname(os.path.realpath(__file__)),
     'data', )
@@ -9,7 +16,6 @@ PLUTO_FIXTURE_DIR = os.path.join(
 
 @pytest.mark.datafiles(
     os.path.join(PLUTO_FIXTURE_DIR, 'pluto'), keep_top_dir=True)
-@pytest.mark.luminosity
 def test_get_luminosity_old_nonconvolved(datafiles, makino_env_12p5, jet_12p5):
     from plutokore import helpers
     from plutokore import io
@@ -29,7 +35,6 @@ def test_get_luminosity_old_nonconvolved(datafiles, makino_env_12p5, jet_12p5):
 
 @pytest.mark.datafiles(
     os.path.join(PLUTO_FIXTURE_DIR, 'pluto'), keep_top_dir=True)
-@pytest.mark.luminosity
 def test_get_luminosity_old_convolved(datafiles, makino_env_12p5, jet_12p5):
     from plutokore import helpers
     from plutokore import io
@@ -56,7 +61,6 @@ def test_get_luminosity_old_convolved(datafiles, makino_env_12p5, jet_12p5):
 
 @pytest.mark.datafiles(
     os.path.join(PLUTO_FIXTURE_DIR, 'pluto'), keep_top_dir=True)
-@pytest.mark.luminosity
 def test_get_surface_brightness(datafiles, makino_env_12p5, jet_12p5):
     from plutokore import helpers
     from plutokore import io
