@@ -104,7 +104,6 @@ def get_unit_values(sim_yaml):
     from astropy import units as u
     from . import environments
     from . import jet
-    from . import helpers
 
     data = read_sim_yaml_file(sim_yaml)
 
@@ -115,7 +114,7 @@ def get_unit_values(sim_yaml):
 
     env = load_environment(env_properties)
     j = load_jet(jet_properties, env)
-    uv = helpers.get_unit_values(env, j)
+    uv = jet.get_unit_values(env, j)
     return uv
 
 def read_definition_file(definition_file):
@@ -237,10 +236,13 @@ def validate_unit_values(yaml_file, definition_file):
 
     # check unit length - it is in cm
     tmp = definition_data['UNIT_LENGTH'].split('*')
-    if len(tmp) == 1: # if there is no '*' then just take the value as it is
+
+    # if there is no '*' then just take the value as it is
+    if len(tmp) == 1: # pragma: no cover
         def_unit_length = float(tmp[0]) * u.cm
     else:             # otherwise the value is assumed to be given in parsecs
         def_unit_length = float(tmp[0]) * u.pc
+
     assert abs((def_unit_length.to(u.cm) - uv.length.to(u.cm)) / def_unit_length.to(u.cm)) < 0.1, 'Unit length in definitions file does not match that calculated by yaml'
 
     # check unit velocity - it is in cm / s
