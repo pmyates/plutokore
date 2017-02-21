@@ -7,7 +7,53 @@ import matplotlib.gridspec as _gridspec
 from mpl_toolkits.axes_grid1 import make_axes_locatable as _make_axes_locatable
 from collections import namedtuple as _namedtuple
 import numpy as _np
-from . import helpers as _hp
+
+def create_colorbar(im,
+                    ax,
+                    fig,
+                    size='5%',
+                    padding=0.05,
+                    position='right',
+                    divider=None,
+                    use_ax=False):  #pragma: no cover
+    if use_ax is False:
+        if divider is None:
+            divider = _make_axes_locatable(ax)
+        cax = divider.append_axes(position, size=size, pad=padding)
+    else:
+        cax = ax
+    ca = fig.colorbar(im, cax=cax)
+    cax.yaxis.set_ticks_position(position)
+    cax.yaxis.set_label_position(position)
+    ca.solids.set_rasterized(True)
+    return (ca, divider, cax)
+
+
+
+def figsize(scale, ratio=None):
+    fig_width_pt = 418.25368  # Get this from LaTeX using \the\textwidth
+    inches_per_pt = 1.0 / 72.27  # Convert pt to inch
+    golden_mean = (
+        _np.sqrt(5.0) - 1.0) / 2.0  # Aesthetic ratio (you could change this)
+    if ratio is None:
+        ratio = golden_mean
+    fig_width = fig_width_pt * inches_per_pt * scale  # width in inches
+    fig_height = fig_width * ratio  # height in inches
+    fig_size = [fig_width, fig_height]
+    return fig_size
+
+
+def newfig(width, ratio=None):
+    import matplotlib.pyplot as _plt
+    _plt.clf()
+    fig = _plt.figure(figsize=figsize(width, ratio))
+    ax = fig.add_subplot(111)
+    return fig, ax
+
+
+def savefig(filename, fig, dpi=300):  #pragma: no cover
+    fig.savefig('./Images/thesis/{}.pgf'.format(filename), dpi=dpi)
+    fig.savefig('./Images/thesis/{}.pdf'.format(filename), dpi=dpi)
 
 
 def get_pluto_data_direct(data_object, variable, log, simulation_directory,
@@ -149,7 +195,7 @@ def get_animation(simulation_directory,
     # plot colobar function
     def plot_colorbar(images):
         if multiple_var is True:
-            (cb1, div, cax1) = _hp.create_colorbar(
+            (cb1, div, cax1) = create_colorbar(
                 images[0],
                 ax,
                 f1,
@@ -157,7 +203,7 @@ def get_animation(simulation_directory,
                 padding=figure_properties.cbar_padding)
             cb1.set_label(figure_properties.cbar_label[0])
             if need_two_colorbars is True:
-                (cb2, div, cax2) = _hp.create_colorbar(
+                (cb2, div, cax2) = create_colorbar(
                     images[1],
                     ax,
                     f1,
@@ -168,7 +214,7 @@ def get_animation(simulation_directory,
                 cb2.set_label(figure_properties.cbar_label[1])
             return div
         else:
-            (cb1, div, cax1) = _hp.create_colorbar(
+            (cb1, div, cax1) = create_colorbar(
                 images,
                 ax,
                 f1,
@@ -475,7 +521,7 @@ def plot_multiple_timesteps(simulation_dir,
 
         # make colorbar
         if colorbar is True:
-            (ca, div, cax) = _hp.create_colorbar(im, ax, fig)
+            (ca, div, cax) = create_colorbar(im, ax, fig)
 
             if (i % ncol) == 1:
                 ca.set_label(figure_properties.cbar_label)

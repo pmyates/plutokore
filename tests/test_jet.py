@@ -32,3 +32,6 @@ def test_get_q(astro_jet):
 
 def test_get_param_table(astro_jet):
     astro_jet.get_calculated_parameter_table()
+
+def test_calculate_unit_values(astro_jet, makino_env):
+    jet.get_unit_values(makino_env, astro_jet)

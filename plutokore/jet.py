@@ -2,6 +2,32 @@ from builtins import object
 import numpy as _np
 import astropy.units as _u
 from tabulate import tabulate as _tabulate
+from collections import namedtuple as _namedtuple
+
+UnitValues = _namedtuple(
+    'UnitValues',
+    ['density', 'length', 'time', 'mass', 'pressure', 'energy', 'speed'])
+
+
+def get_unit_values(environment, jet):
+
+    # calculate unit values
+    unit_density = environment.get_density(jet.L_1b)
+    unit_length = jet.length_scaling
+    unit_time = jet.time_scaling
+    unit_mass = (unit_density * (unit_length**3)).to(_u.kg)
+    unit_pressure = (unit_mass / (unit_length * unit_time**2)).to(_u.Pa)
+    unit_energy = (unit_mass * (unit_length**2) / (unit_time**2)).to(_u.J)
+    unit_speed = environment.sound_speed
+
+    return UnitValues(
+        density=unit_density,
+        length=unit_length,
+        time=unit_time,
+        mass=unit_mass,
+        pressure=unit_pressure,
+        energy=unit_energy,
+        speed=unit_speed)
 
 
 class AstroJet(object):

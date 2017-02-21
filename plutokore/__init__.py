@@ -3,21 +3,21 @@ from .environments.king import KingProfile
 from .jet import AstroJet
 
 from . import radio
-from . import plotting
+from . import plot
 from . import simulations
-from . import helpers
 from . import energy
+from . import utilities
 from . import io
 from . import configuration
 
 __all__ = [
     'environments',
     'radio',
-    'plotting',
+    'plot',
     'simulations',
     'jet',
-    'helpers',
     'io',
     'configuration',
     'energy',
+    'utilities',
 ]
