@@ -6,6 +6,7 @@ from . import radio
 from . import plotting
 from . import simulations
 from . import helpers
+from . import energy
 from . import io
 from . import configuration
 
@@ -18,4 +19,5 @@ __all__ = [
     'helpers',
     'io',
     'configuration',
+    'energy',
 ]
