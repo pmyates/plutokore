@@ -93,3 +93,6 @@ ENV/
 # Vim stuff
 .cs_files
 *.swp
+
+# pluto test data files
+tests/data/pluto/
