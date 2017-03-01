@@ -4,10 +4,16 @@ from . import jet as _jet
 from . import io as _io
 from astropy.convolution import convolve as _convolve
 from astropy.convolution import Box2DKernel as _Box2DKernel
-from contextlib2 import ExitStack as _ExitStack
 from contextlib import contextmanager as _contextmanager
 from .utilities import suppress_stdout as _suppress_stdout
 import numpy as _np
+import sys as _sys
+
+if _sys.version_info[0] == 2:
+    from contextlib2 import ExitStack as _ExitStack
+else:
+    from contextlib import ExitStack as _ExitStack
+
 
 
 def load_simulation_data(ids, directory, suppress_output=None):

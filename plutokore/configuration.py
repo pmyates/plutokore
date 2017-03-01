@@ -7,6 +7,7 @@ def read_sim_yaml_file(yaml_file):
 def create_sim_yaml_file_template(yaml_file, ini_file, definition_file):
     """Create a template simulation yaml file using the given ini and definition files as a base"""
     import yaml
+    import os
 
     default = 'CHANGEME'
 
@@ -40,7 +41,9 @@ def create_sim_yaml_file_template(yaml_file, ini_file, definition_file):
         }
     }
 
-    with open(yaml_file, 'x') as f:
+    if os.path.isfile(yaml_file):
+        raise ValueError('A yaml file already exists at the given path')
+    with open(yaml_file, 'w') as f:
         yaml.dump(yaml_data, stream=f, default_flow_style=False, indent=4)
 
 def validate_yaml(yaml_file, ini_file, definition_file):
@@ -168,8 +171,8 @@ def validate_yaml_with_ini(yaml_file, ini_file):
     assert yaml_data[jp]['opening-angle-degrees'] == ini_data[param].getfloat('theta'), 'Opening angle in pluto.ini does not match angle in yaml'
     
     # calculate duty cycle and check that it matches
-    yaml_duty_cycle = yaml_data[sp]['jet-active-time-myrs'] / yaml_data[sp]['total-time-myrs']
-    ini_duty_cycle = ini_data[param].getfloat('jet_active_time') / ini_data[param].getfloat('simulation_time')
+    yaml_duty_cycle = float(yaml_data[sp]['jet-active-time-myrs']) / float(yaml_data[sp]['total-time-myrs'])
+    ini_duty_cycle = float(ini_data[param].getfloat('jet_active_time')) / float(ini_data[param].getfloat('simulation_time'))
     assert abs(yaml_duty_cycle - ini_duty_cycle) < 0.1, 'Duty cycle (active / total time) in pluto.ini does not match duty cycle in yaml'
 
     # check outburst count matches

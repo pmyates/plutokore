@@ -20,6 +20,7 @@ requirements:
         - matplotlib
         - tabulate
         - contextlib2
+        - h5py
         - pyyaml
 
 test:
