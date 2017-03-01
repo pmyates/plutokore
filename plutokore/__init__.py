@@ -9,6 +9,7 @@ from . import energy
 from . import utilities
 from . import io
 from . import configuration
+from . import jet
 
 __all__ = [
     'environments',
