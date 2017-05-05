@@ -1,10 +1,10 @@
 package:
     name: plutokore
-    version: '0.7'
+    version: '0.8'
 
 source:
     git_url: https://github.com/pmyates/plutokore.git
-    git_rev: 0.7
+    git_rev: 0.8
 
 build:
     noarch_python: True
@@ -13,6 +13,17 @@ requirements:
     build:
         - python
         - setuptools
+        - numpy
+        - astropy
+        - matplotlib
+        - tabulate
+        - contextlib2
+        - h5py
+        - pyyaml
+        - scipy
+        - pytest
+        - pytest-runner
+        - pytest-datafiles
     run:
         - python
         - numpy
