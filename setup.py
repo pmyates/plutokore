@@ -7,10 +7,10 @@ setup(
     description='Python tool for analysing PLUTO simulation data',
     author='Patrick Yates',
     author_email='patrick.yates@utas.edu.au',
-    url='https://github.com/opcon/plutokore',
+    url='https://github.com/pmyates/plutokore',
     keywords=['pluto', 'astrophsyics'],
-    license='MIT',
-    requires=['numpy', 'matplotlib', 'tabulate', 'astropy', 'h5py', 'pyyaml'],
+    license='GPL-3.0',
+    requires=['numpy', 'matplotlib', 'tabulate', 'astropy', 'h5py', 'pyyaml', 'scipy'],
     setup_requires=['pytest-runner'],
     tests_require=['pytest', 'pytest-datafiles'],
     classifiers=[

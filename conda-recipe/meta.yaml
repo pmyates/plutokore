@@ -22,12 +22,13 @@ requirements:
         - contextlib2
         - h5py
         - pyyaml
+        - scipy
 
 test:
     imports:
         - plutokore
 
 about:
-    home: https://github.com/opcon/plutokore
-    license: MIT
+    home: https://github.com/pmyates/plutokore
+    license: GPL-3.0
     license_file: LICENSE
