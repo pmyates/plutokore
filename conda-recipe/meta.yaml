@@ -1,10 +1,10 @@
 package:
     name: plutokore
-    version: '0.6'
+    version: '0.7'
 
 source:
-    git_url: https://github.com/opcon/plutokore.git
-    git_rev: 0.6
+    git_url: https://github.com/pmyates/plutokore.git
+    git_rev: 0.7
 
 build:
     noarch_python: True
@@ -23,6 +23,9 @@ requirements:
         - h5py
         - pyyaml
         - scipy
+        - pytest
+        - pytest-runner
+        - pytest-datafiles
 
 test:
     imports:
