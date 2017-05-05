@@ -13,8 +13,4 @@ setup(
     requires=['numpy', 'matplotlib', 'tabulate', 'astropy', 'h5py', 'pyyaml', 'scipy'],
     setup_requires=['pytest-runner'],
     tests_require=['pytest', 'pytest-datafiles'],
-    classifiers=[
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-    ]
 )
