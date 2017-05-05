@@ -192,6 +192,9 @@ def get_luminosity(
         tracer_effective_zero=1e-10,
         radio_cell_volumes=None,
         radio_cell_areas=None, ):
+    """Calculates the radio luminosity of the given simulation data,
+    for the specified unit values, redshift, beam information,
+    observing frequency and departure from equipartition factor"""
 
     # distance information and conversions
     Dlumin = _cosmo.luminosity_distance(redshift)
@@ -234,6 +237,7 @@ def get_luminosity(
 
 
 def get_flux_density(radio_luminosity, redshift, alpha=0.6):
+    """Calculates the flux density from a given radio luminosity"""
 
     # distance information and conversions
     Dlumin = _cosmo.luminosity_distance(redshift)
@@ -265,6 +269,7 @@ def get_convolved_flux_density(flux_density, redshift, beam_FWHM_arcsec):
 
 def get_surface_brightness(flux_density, simulation_data, unit_values,
                            redshift, beam_FWHM_arcsec):
+    """Calculates the surface brightness from a given flux density"""
 
     kpc_per_arcsec = _cosmo.kpc_proper_per_arcmin(redshift).to(_u.kpc /
                                                                _u.arcsec)
