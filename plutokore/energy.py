@@ -6,6 +6,7 @@ from astropy.convolution import convolve as _convolve
 from astropy.convolution import Box2DKernel as _Box2DKernel
 from contextlib import contextmanager as _contextmanager
 from .utilities import suppress_stdout as _suppress_stdout
+from .simulations import calculate_cell_volume
 import numpy as _np
 import sys as _sys
 
