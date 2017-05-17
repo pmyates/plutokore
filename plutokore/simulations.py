@@ -132,25 +132,33 @@ def get_gridded_data(data,
 
 def calculate_cell_volume(sim_data):
     cell_volumes = _np.zeros((sim_data.n1_tot, sim_data.n2_tot))
-    for i in range(0, cell_volumes.shape[0]):
-        r = (sim_data.x1r[i + 1]**3) - (sim_data.x1r[i]**3)
-        for j in range(0, cell_volumes.shape[1]):
-            volume = 2 * _np.pi * (
-                _np.cos(sim_data.x2r[j]) - _np.cos(sim_data.x2r[j + 1])) * (r /
-                                                                            3)
-            cell_volumes[i, j] = volume
+    if (sim_data.geometry == 'SPHERICAL'):
+        for i in range(0, cell_volumes.shape[0]):
+            r = (sim_data.x1r[i + 1]**3) - (sim_data.x1r[i]**3)
+            for j in range(0, cell_volumes.shape[1]):
+                volume = 2 * _np.pi * (
+                    _np.cos(sim_data.x2r[j]) - _np.cos(sim_data.x2r[j + 1])) * (r /
+                                                                                3)
+                cell_volumes[i, j] = volume
+    elif (sim_data.geometry == 'CARTESIAN'):
+        for i in range(0, cell_volumes.shape[0]):
+            for j in range(0, cell_volumes.shape[1]):
+                cell_volumes[i, j] = sim_data.x1r[i] * sim_data.x2r[j] * 1
     return cell_volumes
 
 
 def calculate_cell_area(sim_data):
     areas = _np.zeros(sim_data.rho.shape)
-    for i in range(0, areas.shape[0]):
-        r = (sim_data.x1r[i + 1]**2) - (sim_data.x1r[i]**2)
-        for j in range(0, areas.shape[1]):
-            area = sim_data.dx2[j] * (r / 2)
-            areas[i, j] = sim_data.x1[i]**2 * _np.sin(sim_data.x2[
-                j]) * sim_data.dx2[j] * _np.pi * 2
-            # areas[i,j] = area
+    if (sim_data.geometry == 'SPHERICAL'):
+        for i in range(0, areas.shape[0]):
+            r = (sim_data.x1r[i + 1]**2) - (sim_data.x1r[i]**2)
+            for j in range(0, areas.shape[1]):
+                areas[i, j] = sim_data.x1[i]**2 * _np.sin(sim_data.x2[
+                    j]) * sim_data.dx2[j] * _np.pi * 2
+    elif (sim_data.geometry == 'CARTESIAN'):
+        for i in range(0, areas.shape[0]):
+            for j in range(0, areas.shape[1]):
+                areas[i, j] = sim_data.x1r[i] * sim_data.x2r[j]
     return areas
 
 
