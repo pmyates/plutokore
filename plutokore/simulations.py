@@ -93,34 +93,40 @@ def sphericaltocartesian(run_data, rotation=None):
     return X1, X2
 
 
-def get_cartesian_grid(irregular_grid, x_count, y_count):
-    xi = _np.linspace(irregular_grid[0].min(), irregular_grid[0].max(),
+def get_cartesian_grid(irregular_grid, x_count, y_count, min_offset=0.1):
+    xmin = irregular_grid[0].min()
+    ymin = irregular_grid[1].min()
+    xi = _np.linspace(xmin + min_offset, irregular_grid[0].max(),
                       x_count)
-    yi = _np.linspace(irregular_grid[1].min(), irregular_grid[1].max(),
+    yi = _np.linspace(ymin + min_offset, irregular_grid[1].max(),
                       y_count)
     return tuple(_np.meshgrid(xi, yi))
 
 
-def get_gridded_data(sim_data,
-                     data_variable='rho',
-                     irregular_grid=None,
+def get_gridded_data(data,
+                     irregular_grid,
                      cart_grid=None,
-                     method='cubic'):
+                     method='cubic',
+                     xcount=200,
+                     ycount=200,
+                     fill_value=0):
+    from scipy.interpolate import griddata
+
     # sort out our grid
-    if irregular_grid is None:
-        irregular_grid = sphericaltocartesian(sim_data)
     if cart_grid is None:
         cart_grid = get_cartesian_grid(
-            irregular_grid, x_count=sim_data.n1_tot, y_count=sim_data.n1_tot)
+            irregular_grid, x_count=xcount, y_count=ycount)
     print(len(irregular_grid))
     print(len(cart_grid))
+    print('fill value is: {0}'.format(fill_value))
     # interpolate data
-    gridded_data = _np.ma.masked_invalid(
-        griddata(
-            (irregular_grid[0].ravel(), irregular_grid[1].ravel()),
-            getattr(sim_data, data_variable).ravel(order='F'),
-            cart_grid,
-            method=method))
+    gridded_data = griddata(
+        (irregular_grid[0].flatten(), irregular_grid[1].flatten()),
+        data.flatten('F'),
+        cart_grid,
+        method=method,
+        fill_value=fill_value)
+    #gridded_data = _np.ma.masked_invalid(gridded_data)
     return gridded_data, cart_grid
 
 
