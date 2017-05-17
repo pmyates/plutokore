@@ -106,6 +106,8 @@ def calculate_run_energy(run_directory,
                          tracer_or_not=True,
                          ntracers=0):
     """Calculates the change in energy components for a range of timesteps"""
+    from .simulations import load_timestep_data, calculate_cell_volume
+
     total_energy = []
     kinetic_energy = []
     potential_energy = []
@@ -116,7 +118,7 @@ def calculate_run_energy(run_directory,
         var_list = ['prs', 'rho']
 
     if initial_data is None:
-        initial_data = load_simulation_data(timesteps[0], run_directory)[0]
+        initial_data = load_timestep_data(timesteps[0], run_directory)
 
     if correct_numerical_errors in [None, True]:
         for v in var_list:
@@ -126,7 +128,7 @@ def calculate_run_energy(run_directory,
     run_data = None
 
     for time in timesteps:
-        run_data = load_simulation_data([time], run_directory)[0]
+        run_data = load_timestep_data(time, run_directory)
 
         # perform numerical corrections
         if correct_numerical_errors in [None, True]:
