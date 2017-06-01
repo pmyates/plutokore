@@ -139,10 +139,10 @@ class pload(object):
             fh5.close()
         else:
             ns = self.NStep
-            f_var = open(timefile, "r")
-            tlist = []
-            for line in f_var.readlines():
-                tlist.append(line.split())
+            with open(timefile, "r") as f_var:
+                tlist = []
+                for line in f_var.readlines():
+                    tlist.append(line.split())
             self.SimTime = float(tlist[ns][1])
             self.Dt = float(tlist[ns][2])
 
@@ -181,24 +181,24 @@ class pload(object):
         xL = []
         xR = []
         nmax = []
-        gfp = open(gridfile, "r")
-        for i in gfp.readlines():
-            if len(i.split()) == 1:
-                try:
-                    int(i.split()[0])
-                    nmax.append(int(i.split()[0]))
-                except:
-                    pass
+        with open(gridfile, "r") as gfp:
+            for i in gfp.readlines():
+                if len(i.split()) == 1:
+                    try:
+                        int(i.split()[0])
+                        nmax.append(int(i.split()[0]))
+                    except:
+                        pass
 
-            if len(i.split()) == 3:
-                try:
-                    int(i.split()[0])
-                    xL.append(float(i.split()[1]))
-                    xR.append(float(i.split()[2]))
-                except:
-                    if (i.split()[1] == 'GEOMETRY:'):
-                        self.geometry = i.split()[2]
-                    pass
+                if len(i.split()) == 3:
+                    try:
+                        int(i.split()[0])
+                        xL.append(float(i.split()[1]))
+                        xR.append(float(i.split()[2]))
+                    except:
+                        if (i.split()[1] == 'GEOMETRY:'):
+                            self.geometry = i.split()[2]
+                        pass
 
         self.n1, self.n2, self.n3 = nmax
         n1 = self.n1
