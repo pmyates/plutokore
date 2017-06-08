@@ -10,13 +10,35 @@ class SimulationConfiguration:
         self.ini_file = ini_file,
         self.definition_file = definition_file
 
+        # Create empty error list
+        self.errors = []
+
+        # Set tolerance value
+        self.tolerance = 1e-3
+
+    def check_values(self, success, expected, actual, location, message):
+        """
+        Checks the expected value against the actual value.
+        Returns False if they don't match, True if they do.
+        If they do not match, an error is added to the error list.
+        """
+        if not (success):
+            self.errors.append({
+                'message': message,
+                'location': location,
+                'expected_value': expected,
+                'actual_value': actual,
+            })
+            return False
+        return True
+
     def validate(self):
-        self.validate_yaml_keys()
-        self.validate_yaml_with_ini()
-        self.validate_yaml_with_definitions()
-        self.validate_unit_values()
-        self.validate_times()
-        self.validate_environment()
+        if not self.validate_yaml_keys(): return
+        if not self.validate_yaml_with_ini(): return
+        if not self.validate_yaml_with_definitions(): return
+        if not self.validate_unit_values(): return
+        if not self.validate_times(): return
+        if not self.validate_environment(): return
 
     def load_environment(self, env_properties):
         """Create an environment from the given environment properties"""
@@ -98,24 +120,26 @@ class SimulationConfiguration:
         ini_data = read_ini_file(self.ini_file)
 
         # check mach number matches
-        assert yaml_data[jp]['mach-number'] == ini_data[param].getfloat('mach'), 'Mach number in pluto.ini does not match Mach number in yaml'
+        self.check_values(yaml_data[jp]['mach-number'] == ini_data[param].getfloat('mach'), yaml_data[jp]['mach-number'], ini_data[param].getfloat('mach'), 'pluto.ini', 'Mach number in pluto.ini does not match Mach number in yaml')
 
         # check opening angle matches
         if self.yaml_version == 1:
-            assert yaml_data[jp]['opening-angle-degrees'] == ini_data[param].getfloat('theta'), 'Opening angle in pluto.ini does not match angle in yaml'
+            self.check_values(yaml_data[jp]['opening-angle-degrees'] == ini_data[param].getfloat('theta'), yaml_data[jp]['opening-angle-degrees'], ini_data[param].getfloat('theta'), 'pluto.ini', 'Opening angle in pluto.ini does not match angle in yaml')
         elif self.yaml_version >= 2:
             # check first jet opening angle
-            assert yaml_data[jp]['opening-angle-degrees-one'] == ini_data[param].getfloat('theta_one'), 'Opening angle in pluto.ini does not match angle in yaml'
+            self.check_values(yaml_data[jp]['opening-angle-degrees-one'] == ini_data[param].getfloat('theta_one'), yaml_data[jp]['opening-angle-degrees-one'], ini_data[param].getfloat('theta_one'), 'pluto.ini', 'Opening angle in pluto.ini does not match angle in yaml')
             # check second jet opening angle
-            assert yaml_data[jp]['opening-angle-degrees-two'] == ini_data[param].getfloat('theta_two'), 'Second jet opening angle in pluto.ini does not match angle in yaml'
+            self.check_values(yaml_data[jp]['opening-angle-degrees-two'] == ini_data[param].getfloat('theta_two'), yaml_data[jp]['opening-angle-degrees-two'], ini_data[param].getfloat('theta_two'), 'pluto.ini', 'Second jet opening angle in pluto.ini does not match angle in yaml')
 
         # calculate duty cycle and check that it matches
         yaml_duty_cycle = float(yaml_data[sp]['jet-active-time-myrs']) / float(yaml_data[sp]['total-time-myrs'])
         ini_duty_cycle = float(ini_data[param].getfloat('jet_active_time')) / float(ini_data[param].getfloat('simulation_time'))
-        assert abs(yaml_duty_cycle - ini_duty_cycle) < 0.1, 'Duty cycle (active / total time) in pluto.ini does not match duty cycle in yaml'
+        self.check_values(relative_error(yaml_duty_cycle, ini_duty_cycle) <= self.tolerance, yaml_duty_cycle, ini_duty_cycle, 'pluto.ini', 'Duty cycle (active / total time) in pluto.ini does not match duty cycle in yaml')
 
         # check outburst count matches
-        assert yaml_data['intermittent-properties']['outburst-count'] == ini_data[param].getfloat('jet_episodes'), 'Outburst count in pluto.ini does not match outburst count in yaml'
+        self.check_values(yaml_data['intermittent-properties']['outburst-count'] == ini_data[param].getfloat('jet_episodes'), yaml_data['intermittent-properties']['outburst-count'], ini_data[param].getfloat('jet_episodes'), 'pluto.ini', 'Outburst count in pluto.ini does not match outburst count in yaml')
+
+        return True
 
     def validate_yaml_with_definitions(self):
         """Validates the given yaml file against the given definition file"""
@@ -132,21 +156,23 @@ class SimulationConfiguration:
         definitions_data = read_definition_file(self.definition_file)
 
         # check geometry matches
-        assert yaml_data[sp]['geometry'].lower() == definitions_data[geom].lower(), 'Geometry in definitions.h does not match geometry in yaml'
+        self.check_values(yaml_data[sp]['geometry'].lower() == definitions_data[geom].lower(), yaml_data[sp]['geometry'].lower(), definitions_data[geom].lower(), 'definitions.h', 'Geometry in definitions.h does not match geometry in yaml')
 
         # check dimensions matches
-        assert yaml_data[sp]['dimensions'] == int(definitions_data[dim]), 'Dimensions in definitions.h does not match dimensions in yaml'
+        self.check_values(yaml_data[sp]['dimensions'] == int(definitions_data[dim]), yaml_data[sp]['dimensions'], int(definitions_data[dim]), 'definitions.h', 'Dimensions in definitions.h does not match dimensions in yaml')
 
         # check tracer count matches
-        assert yaml_data[sp]['tracer-count'] == int(definitions_data[ntrc]), 'Tracer count in definitions.h does not match tracer count in yaml'
+        self.check_values(yaml_data[sp]['tracer-count'] == int(definitions_data[ntrc]), yaml_data[sp]['tracer-count'], int(definitions_data[ntrc]), 'definitions.h', 'Tracer count in definitions.h does not match tracer count in yaml')
 
         # check unique jet matches
         if self.yaml_version >=2:
-            assert yaml_data[sp]['unique-jets'] == bool(definitions_data[uj].lower()), 'Unique jets setting in definitions.h does not match unique jets setting in yaml'
+            self.check_values(yaml_data[sp]['unique-jets'] == bool(definitions_data[uj].lower()), yaml_data[sp]['unique-jets'], bool(definitions_data[uj].lower()), 'definitions.h', 'Unique jets setting in definitions.h does not match unique jets setting in yaml')
 
         # check environment matches
         if self.yaml_version >=2:
-            assert yaml_data['environment-properties']['profile'].lower() == definitions_data[dp].lower(), 'Profile specified in definitions.h does not match profile specified in yaml'
+            self.check_values(yaml_data['environment-properties']['profile'].lower() == definitions_data[dp].lower(), yaml_data['environment-properties']['profile'].lower(), definitions_data[dp].lower(), 'definitions.h', 'Profile specified in definitions.h does not match profile specified in yaml')
+
+        return True
 
 
     def validate_yaml_keys(self):
@@ -159,7 +185,8 @@ class SimulationConfiguration:
             self.yaml_version = data['yaml-version']
         else:
             self.yaml_version = 1
-        assert self.yaml_version <= self.latest_yaml_version, 'Yaml file is too new to be handled by this code'
+
+        if not self.check_values(self.yaml_version <= self.latest_yaml_version, '<= {}'.format(self.latest_yaml_version), self.yaml_version, 'config.yaml', 'Yaml file is too new to be handled by this code'): return False
 
         if self.yaml_version == 1:
             base_keys = ('environment-properties', 'jet-properties', 'simulation-properties')
@@ -181,16 +208,18 @@ class SimulationConfiguration:
         extra_keys = ('intermittent-properties')
 
         for k in base_keys:
-            assert k in data
+            if not self.check_values(k in data, k, data, 'config.yaml', 'Key does not exist in yaml file'): return False
         for k in e_keys:
-            assert k in data['environment-properties']
+            if not self.check_values(k in data['environment-properties'], k, data['environment-properties'], 'config.yaml', 'Key does not exist in yaml file'): return False
         for k in j_keys:
-            assert k in data['jet-properties']
+            if not self.check_values(k in data['jet-properties'], k, data['jet-properties'], 'config.yaml', 'Key does not exist in yaml file'): return False
         for k in s_keys:
-            assert k in data['simulation-properties']
+            if not self.check_values(k in data['simulation-properties'], k, data['simulation-properties'], 'config.yaml', 'Key does not exist in yaml file'): return False
         if 'intermittent-properties' in data:
             for k in i_keys:
-                assert k in data['intermittent-properties']
+                if not self.check_values(k in data['intermittent-properties'], k, data['intermittent-properties'], 'config.yaml', 'Key does not exist in yaml file'): return False
+
+        return True
 
     def validate_unit_values(self):
         """Validate the unit files obtained from the given yaml file with those in the definition file"""
@@ -204,7 +233,7 @@ class SimulationConfiguration:
 
         # check unit density - it is in g / cm^3
         def_unit_density = float(definition_data['UNIT_DENSITY']) * u.g / (u.cm ** 3)
-        assert abs((def_unit_density - uv.density.to(u.g / u.cm ** 3)) / def_unit_density) < 0.1, 'Unit density in definitions file does not match that calculated by yaml'
+        self.check_values(relative_error(def_unit_density, uv.density.to(u.g / u.cm ** 3)) <= self.tolerance, uv.density.to(u.g / u.cm ** 3), def_unit_density, 'defintions.h', 'Unit density in definitions file does not match that calculated by yaml')
 
         # check unit length - it is in cm
         tmp = definition_data['UNIT_LENGTH'].split('*')
@@ -215,11 +244,13 @@ class SimulationConfiguration:
         else:             # otherwise the value is assumed to be given in parsecs
             def_unit_length = float(tmp[0]) * u.pc
 
-        assert abs((def_unit_length.to(u.cm) - uv.length.to(u.cm)) / def_unit_length.to(u.cm)) < 0.1, 'Unit length in definitions file does not match that calculated by yaml'
+        self.check_values(relative_error(uv.length.to(u.kpc), def_unit_length.to(u.kpc)) <= self.tolerance, uv.length.to(u.kpc), def_unit_length.to(u.kpc), 'definitions.h', 'Unit length in definitions file does not match that calculated by yaml')
 
         # check unit velocity - it is in cm / s
         def_unit_velocity = float(definition_data['UNIT_VELOCITY']) * u.cm / u.s
-        assert abs((def_unit_velocity - uv.speed.to(u.cm / u.s)) / def_unit_velocity) < 0.1, 'Unit velocity in definitions file does not match that calculated by yaml'
+        self.check_values(relative_error(uv.speed.to(u.cm / u.s), def_unit_velocity) <= self.tolerance, uv.speed.to(u.km / u.s), def_unit_velocity.to(u.km / u.s), 'defintions.h', 'Unit velocity in definitions file does not match that calculated by yaml')
+
+        return True
 
     def validate_times(self):
         """Validate the times obtained from the yaml file with those given in the ini file"""
@@ -236,11 +267,13 @@ class SimulationConfiguration:
 
         total_time_yaml = yaml_data[sp]['total-time-myrs'] * u.Myr
         total_time_sim = uv.time * ini_data[param].getfloat('simulation_time')
-        assert abs((total_time_sim - total_time_yaml) / total_time_sim) < 0.1, 'Total simulation time in ini file does not match that calculated by yaml'
+        self.check_values(relative_error(total_time_yaml, total_time_sim) <= self.tolerance, total_time_yaml, total_time_sim, 'pluto.ini', 'Total simulation time in ini file does not match that calculated by yaml')
 
         active_time_yaml = yaml_data[sp]['jet-active-time-myrs'] * u.Myr
         active_time_sim = uv.time * ini_data[param].getfloat('jet_active_time')
-        assert abs((active_time_sim - active_time_yaml) / active_time_sim) < 0.1, 'Jet active time in ini file does not match that calculated by yaml'
+        self.check_values(relative_error(active_time_yaml, active_time_sim) <= self.tolerance, total_time_yaml, total_time_sim, 'pluto.ini', 'Jet active time in ini file does not match that calculated by yaml')
+
+        return True
 
     def validate_environment(self):
         """Validate the environment obtained from the yaml file with that given in the ini file"""
@@ -264,19 +297,21 @@ class SimulationConfiguration:
         # check rho_0
         rho_0_sim = ini_data[param].getfloat('rho_0') * uv.density
         rho_0_calculated = env_data.central_density
-        assert relative_error(rho_0_sim, rho_0_calculated) < 0.1, 'Calculated rho_0 does not match rho_0 given in pluto.ini'
+        self.check_values(relative_error(rho_0_calculated, rho_0_sim) <= self.tolerance, rho_0_calculated, rho_0_sim, 'pluto.ini', 'Calculated rho_0 does not match rho_0 given in pluto.ini')
 
         # check delta_nfw - only if this is an NFW profile!
         if env == 'makino':
-            assert relative_error(env_data.nfw_parameter, ini_data[param].getfloat('delta_nfw')) < 0.1, 'Calculated delta_NFW does not match delta_NFW given in pluto.ini'
+            self.check_values(relative_error(env_data.nfw_parameter.value, ini_data[param].getfloat('delta_nfw')) <= self.tolerance, env_data.nfw_parameter.value, ini_data[param].getfloat('delta_nfw'), 'pluto.ini', 'Calculated delta_NFW does not match delta_NFW given in pluto.ini')
 
         # check r_scaling - if this is nfw
         if env == 'makino':
-            assert relative_error(env_data.scale_radius, ini_data[param].getfloat('r_scaling') * uv.length) < 0.1, 'Calculated scale/core radius does not match that given in pluto.ini'
+            self.check_values(relative_error(env_data.scale_radius, ini_data[param].getfloat('r_scaling') * uv.length) <= self.tolerance, env_data.scale_radius, ini_data[param].getfloat('r_scaling') * uv.length, 'pluto.ini', 'Calculated scale/core radius does not match that given in pluto.ini')
 
         # check r_core - if this is king
         if env == 'king':
-            assert relative_error(env_data.core_radius, ini_data[param].getfloat('r_scaling') * uv.length) < 0.1, 'Calculated scale/core radius does not match that given in pluto.ini'
+            self.check_values(relative_error(env_data.core_radius, ini_data[param].getfloat('r_scaling') * uv.length) <= self.tolerance, env_data.core_radius, ini_data[param].getfloat('r_scaling') * uv.length, 'pluto.ini', 'Calculated scale/core radius does not match that given in pluto.ini')
+
+        return True
 
 def create_sim_yaml_file_template(yaml_file, ini_file, definition_file):
     """Create a template simulation yaml file using the given ini and definition files as a base"""
@@ -345,6 +380,7 @@ def validate_yaml(yaml_file, ini_file, definition_file):
     """Validate a yaml file with ini and definition files"""
     config = SimulationConfiguration(yaml_file, ini_file, definition_file)
     config.validate()
+    return config.errors
 
 def read_sim_yaml_file(yaml_file):
     """Return a list of all lines in the given yaml file"""
