@@ -295,8 +295,8 @@ def convolve_surface_brightness(sb, unit_values, redshift, beam_FWHM_arcsec):
     sigma_beam_arcsec = beam_FWHM_arcsec / 2.355
     area_beam_kpc2 = (_np.pi * (sigma_beam_arcsec * kpc_per_arcsec)
                       **2).to(_u.kpc**2)
-
-    beam_kernel = _Gaussian2DKernel((sigma_beam_arcsec * kpc_per_arcsec) / unit_values.length)
+    stddev = ((sigma_beam_arcsec * kpc_per_arcsec) / unit_values.length).si
+    beam_kernel = _Gaussian2DKernel(stddev)
 
     return _convolve(sb.to(_u.Jy), beam_kernel, boundary='extend') * _u.Jy
 
