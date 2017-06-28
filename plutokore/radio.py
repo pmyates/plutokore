@@ -287,3 +287,17 @@ def get_surface_brightness(flux_density, simulation_data, unit_values,
     n_beams_per_cell = (radio_cell_areas_physical / area_beam_kpc2).si
 
     return flux_density / n_beams_per_cell
+
+def convolve_surface_brightness(sb, unit_values, redshift, beam_FWHM_arcsec):
+    kpc_per_arcsec = _cosmo.kpc_proper_per_arcmin(redshift).to(_u.kpc /
+                                                               _u.arcsec)
+    # beam information
+    sigma_beam_arcsec = beam_FWHM_arcsec / 2.355
+    area_beam_kpc2 = (_np.pi * (sigma_beam_arcsec * kpc_per_arcsec)
+                      **2).to(_u.kpc**2)
+
+    beam_kernel = _Gaussian2DKernel((sigma_beam_arcsec * kpc_per_arcsec) / unit_values.length)
+
+    return _convolve(sb.to(_u.Jy), beam_kernel, boundary='extend') * _u.Jy
+
+
