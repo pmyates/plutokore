@@ -644,10 +644,12 @@ class pload(object):
         n2_tot = self.n2_tot
         n3_tot = self.n3_tot
 
-        A = _array.array(dtype)
-        fmt = endian + str(n1_tot * n2_tot * n3_tot) + dtype
-        nb = _np.dtype(fmt).itemsize
-        A.fromstring(fp.read(nb))
+        #A = _array.array(dtype)
+        #fmt = endian + str(n1_tot * n2_tot * n3_tot) + dtype
+        #print(fmt)
+        #nb = _np.dtype(fmt).itemsize
+        #A.fromstring(fp.read(nb))
+        A = _np.fromstring(fp.read(n1_tot*n2_tot*n3_tot*8), dtype=_np.dtype(endian + dtype))
 
         if (self.Slice):
             darr = _np.zeros((n1 * n2 * n3))
@@ -656,14 +658,15 @@ class pload(object):
                 for i in self.irange for j in self.jrange for k in self.krange
             ])
             if (sys.byteorder != self.endianess):
-                A.byteswap()
+                A.byteswap(true)
             for ii, iii in enumerate(indxx):
                 darr[ii] = A[iii]
             darr = [darr]
         else:
-            darr = _np.frombuffer(A, dtype=_np.dtype(fmt))
+            darr = A
+            #darr = _np.frombuffer(A, dtype=_np.dtype(fmt))
 
-        return _np.reshape(darr[0], self.nshp).transpose()
+        return _np.reshape(darr, self.nshp).transpose()
 
     def ReadSingleFile(self, datafilename, myvars, n1, n2, n3, endian, dtype,
                        ddict):
