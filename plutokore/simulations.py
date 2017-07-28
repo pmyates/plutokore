@@ -83,7 +83,7 @@ def sphericaltocartesian(run_data, rotation=None):
     if rotation is None:
         rotation = _np.pi / 2
     # generate the spherical polar grid
-    R, Theta = _np.meshgrid(run_data.x1, run_data.x2)
+    R, Theta = _np.meshgrid(run_data.x1r, run_data.x2r)
     # rotate theta so that jet is pointing upwards - not necessarily needed
     Theta = Theta - rotation
 
