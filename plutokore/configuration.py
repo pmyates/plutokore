@@ -271,7 +271,7 @@ class SimulationConfiguration:
 
         active_time_yaml = yaml_data[sp]['jet-active-time-myrs'] * u.Myr
         active_time_sim = uv.time * ini_data[param].getfloat('jet_active_time')
-        self.check_values(relative_error(active_time_yaml, active_time_sim) <= self.tolerance, total_time_yaml, total_time_sim, 'pluto.ini', 'Jet active time in ini file does not match that calculated by yaml')
+        self.check_values(relative_error(active_time_yaml, active_time_sim) <= self.tolerance, active_time_yaml, active_time_sim, 'pluto.ini', 'Jet active time in ini file does not match that calculated by yaml.\nSet to {} to match yaml.'.format(active_time_yaml / uv.time))
 
         return True
 
