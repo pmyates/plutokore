@@ -48,11 +48,11 @@ def get_tracer_count_data(sim_data):
     return len([trc for trc in sim_data.vars if 'tr' in trc])
 
 
-def load_timestep_data(timestep, directory, suppress_output=None):
+def load_timestep_data(timestep, directory, suppress_output=None, mmap=False):
     with _ExitStack() as stack:
         if suppress_output in [None, True]:
             stack.enter_context(_suppress_stdout())
-            return _io.pload(timestep, w_dir=directory)
+            return _io.pload(timestep, w_dir=directory, mmap=mmap)
 
 
 def load_simulation_variables(ids, directory, var_list, suppress_output=None):

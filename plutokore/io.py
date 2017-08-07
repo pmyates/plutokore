@@ -67,7 +67,8 @@ class pload(object):
                  level=0,
                  x1range=None,
                  x2range=None,
-                 x3range=None):
+                 x3range=None,
+                 mmap=False):
         """Loads the data.
 	
         **Inputs**:
@@ -98,6 +99,8 @@ class pload(object):
         self.x1range = x1range
         self.x2range = x2range
         self.x3range = x3range
+
+        self.mmap = mmap
 
         self.NStepStr = str(self.NStep)
         while len(self.NStepStr) < 4:
@@ -649,7 +652,12 @@ class pload(object):
         #print(fmt)
         #nb = _np.dtype(fmt).itemsize
         #A.fromstring(fp.read(nb))
-        A = _np.fromstring(fp.read(n1_tot*n2_tot*n3_tot*8), dtype=_np.dtype(endian + dtype))
+        #A = _np.fromstring(fp.read(n1_tot*n2_tot*n3_tot*8), dtype=_np.dtype(endian + dtype))
+        dt = _np.dtype(endian + dtype)
+        if self.mmap:
+            return _np.memmap(fp, dtype=dt, mode='c', shape=self.nshp, order='C').T
+        else:
+            A = _np.fromfile(fp, dtype=dt)
 
         if (self.Slice):
             darr = _np.zeros((n1 * n2 * n3))
@@ -690,6 +698,8 @@ class pload(object):
 	"""
         if self.datatype == 'hdf5':
             fp = h5.File(datafilename, 'r')
+        elif self.mmap:
+            fp = datafilename
         else:
             fp = open(datafilename, "rb")
 
@@ -721,7 +731,8 @@ class pload(object):
                         myvars[i]: self.DataScan(fp, n1, n2, n3, endian, dtype)
                     })
 
-        fp.close()
+        if not self.mmap:
+            fp.close()
 
     def ReadMultipleFiles(self, nstr, dataext, myvars, n1, n2, n3, endian,
                           dtype, ddict):
@@ -747,14 +758,18 @@ class pload(object):
 	"""
         for i in range(len(myvars)):
             datafilename = self.wdir + myvars[i] + "." + nstr + dataext
-            fp = open(datafilename, "rb")
+            if self.mmap:
+                fp = datafilename
+            else:
+                fp = open(datafilename, "rb")
             if self.datatype == 'vtk':
                 ddict.update(self.DataScanVTK(fp, n1, n2, n3, endian, dtype))
             else:
                 ddict.update({
                     myvars[i]: self.DataScan(fp, n1, n2, n3, endian, dtype)
                 })
-            fp.close()
+            if not self.mmap:
+                fp.close()
 
     def ReadDataFile(self, num):
         """Reads the data file generated from PLUTO code.
