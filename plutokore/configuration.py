@@ -1,7 +1,7 @@
 class SimulationConfiguration:
 
     # yaml version
-    latest_yaml_version = 2
+    latest_yaml_version = 3
 
     def __init__(self, yaml_file, ini_file, definition_file):
 
@@ -15,6 +15,8 @@ class SimulationConfiguration:
 
         # Set tolerance value
         self.tolerance = 1e-3
+
+        self.validate_yaml_keys()
 
     def check_values(self, success, expected, actual, location, message):
         """
@@ -103,10 +105,10 @@ class SimulationConfiguration:
         simulation_properties = data['simulation-properties']
         intermittent_properties = data['intermittent-properties']
 
-        env = self.load_environment(env_properties)
-        j = self.load_jet(jet_properties, env)
-        uv = jet.get_unit_values(env, j)
-        return uv
+        self.env = self.load_environment(env_properties)
+        self.jet = self.load_jet(jet_properties, self.env)
+        self.uv = jet.get_unit_values(self.env, self.jet)
+        return self.uv
 
     def validate_yaml_with_ini(self):
         """Validates the given yaml file against the given ini file"""
@@ -118,6 +120,9 @@ class SimulationConfiguration:
         # load the files
         yaml_data = read_sim_yaml_file(self.yaml_file)
         ini_data = read_ini_file(self.ini_file)
+
+        # Load unit values
+        uv = self.get_unit_values()
 
         # check mach number matches
         self.check_values(yaml_data[jp]['mach-number'] == ini_data[param].getfloat('mach'), yaml_data[jp]['mach-number'], ini_data[param].getfloat('mach'), 'pluto.ini', 'Mach number in pluto.ini does not match Mach number in yaml')
@@ -138,6 +143,27 @@ class SimulationConfiguration:
 
         # check outburst count matches
         self.check_values(yaml_data['intermittent-properties']['outburst-count'] == ini_data[param].getfloat('jet_episodes'), yaml_data['intermittent-properties']['outburst-count'], ini_data[param].getfloat('jet_episodes'), 'pluto.ini', 'Outburst count in pluto.ini does not match outburst count in yaml')
+
+        # check grid dimensions
+        if self.yaml_version >=3:
+            x1 = yaml_data[sp]['x1']
+            x1_ini = ini_data['Grid']['X1-grid'].split()
+            x1_ini = ([float(x1_ini[1]), float(x1_ini[-1])]*uv.length).value
+            self.check_values(relative_error(x1[0], x1_ini[0]) <= self.tolerance, x1[0], x1_ini[0], 'pluto.ini', 'Lower x1 limit does not match')
+            self.check_values(relative_error(x1[1], x1_ini[1]) <= self.tolerance, x1[1], x1_ini[1], 'pluto.ini', 'Upper x1 limit does not match')
+
+            x2 = yaml_data[sp]['x2']
+            x2_ini = ini_data['Grid']['X2-grid'].split()
+            x2_ini = ([float(x2_ini[1]), float(x2_ini[-1])]*uv.length).value
+            self.check_values(relative_error(x2[0], x2_ini[0]) <= self.tolerance, x2[0], x2_ini[0], 'pluto.ini', 'Lower x2 limit does not match')
+            self.check_values(relative_error(x2[1], x2_ini[1]) <= self.tolerance, x2[1], x2_ini[1], 'pluto.ini', 'Upper x2 limit does not match')
+
+            if yaml_data[sp]['dimensions'] == 3:
+                x3 = yaml_data[sp]['x3']
+                x3_ini = ini_data['Grid']['X3-grid'].split()
+                x3_ini = ([float(x3_ini[1]), float(x3_ini[-1])]*uv.length).value
+                self.check_values(relative_error(x3[0], x3_ini[0]) <= self.tolerance, x3[0], x3_ini[0], 'pluto.ini', 'Lower x3 limit does not match')
+                self.check_values(relative_error(x3[1], x3_ini[1]) <= self.tolerance, x3[1], x3_ini[1], 'pluto.ini', 'Upper x3 limit does not match')
 
         return True
 

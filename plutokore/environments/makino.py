@@ -50,6 +50,7 @@ class MakinoProfile(object):
 
         if concentration_method is None:
             concentration_method = 'klypin-planck-relaxed'
+        self.concentration_method = concentration_method
 
         self.critical_density = self.calculate_critical_density(
             self.redshift, cosmo=self.cosmo)
@@ -64,7 +65,7 @@ class MakinoProfile(object):
         self.concentration = self.calculate_concentration(
             self.halo_mass,
             redshift=self.redshift,
-            method=concentration_method,
+            method=self.concentration_method,
             cosmo=self.cosmo)
         self.scale_radius = self.calculate_scale_radius(self.virial_radius,
                                                         self.concentration)
