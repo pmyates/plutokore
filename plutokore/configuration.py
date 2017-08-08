@@ -205,6 +205,7 @@ class SimulationConfiguration:
         """Validates the keys in the given yaml file"""
 
         data = read_sim_yaml_file(self.yaml_file)
+        self.yaml = data
 
         # check we can process this yaml file (version is <= to latest_yaml_version)
         if 'yaml-version' in data:
