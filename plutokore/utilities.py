@@ -39,3 +39,17 @@ def close_open_hdf5_files():  #pragma: no cover
                 obj.close()
             except:
                 pass  # Was already closed
+class tcolors:
+    HEADER = '\033[95m'
+    BLUE = '\033[94m'
+    GREEN = '\033[92m'
+    LIGHT_CYAN = '\033[96m'
+    LIGHT_YELLOW = '\033[93m'
+    LIGHT_RED = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+    @classmethod
+    def print_with_color(cls, colour, s, **kwargs):
+        print(colour + s + cls.ENDC, **kwargs)
