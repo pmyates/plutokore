@@ -12,15 +12,12 @@ import pprint
 from astropy import units as u
 from tabulate import tabulate
 import numpy as np
+from plutokore.utilities import tcolors
 
 def print_jet_info(cfile):
-    config = pk.configuration.SimulationConfiguration(cfile, None, None)
-    uv = config.get_unit_values()
-    env = config.env
-    jet = config.jet
-    print(f'Information for {cfile}')
+    print(f'{tcolors.HEADER}Information for {cfile}{tcolors.ENDC}')
 
-    print('\nEnvironment:')
+    print(f'\n{tcolors.BLUE+tcolors.BOLD}Environment:{tcolors.ENDC}')
     print(tabulate([
         ['halo mass', f'1e{np.log10(env.halo_mass.value)}'],
         ['redshift', env.redshift],
@@ -36,7 +33,7 @@ def print_jet_info(cfile):
 
     ]))
 
-    print('\nJet:')
+    print(f'\n{tcolors.BLUE+tcolors.BOLD}Jet:{tcolors.ENDC}')
     print(tabulate([
         ['half opening angle', np.rad2deg(jet.theta)],
         ['external mach number', jet.M_x],
@@ -50,7 +47,7 @@ def print_jet_info(cfile):
         ['L2', jet.L_2]
     ]))
 
-    print('\nUnit Values:')
+    print(f'\n{tcolors.BLUE+tcolors.BOLD}Unit Values:{tcolors.ENDC}')
     print(tabulate([
         ['density', uv.density],
         ['length', uv.length],
@@ -61,16 +58,96 @@ def print_jet_info(cfile):
         ['energy', uv.energy],
     ]))
 
-    print('\ndefinitions.h unit values:')
+    print(f'\n{tcolors.BLUE+tcolors.BOLD}definitions.h unit values:{tcolors.ENDC}')
     print(tabulate([
         ['UNIT_DENSITY', uv.density.to(u.g / u.cm **3).value],
         ['UNIT_LENGTH', f'{uv.length.to(u.kpc).value}e3*CONST_pc'],
         ['UNIT_VELOCITY', f'{uv.speed.to(u.cm / u.s).value/1e7}e7'],
     ]))
 
+def print_sim_info(cfile):
+    print(f'{tcolors.HEADER}Information for {cfile}{tcolors.ENDC}')
+    yml = config.yaml
+
+    print(f'\n{tcolors.BLUE+tcolors.BOLD}Time information:{tcolors.ENDC}')
+    print(tabulate([
+        ['Simulation time', (yml['simulation-properties']['total-time-myrs'] * u.Myr) / uv.time],
+        ['Jet active time', (yml['simulation-properties']['jet-active-time-myrs'] * u.Myr) / uv.time],
+    ]))
+
+    if yml['yaml-version'] >= 3:
+        print(f'\n{tcolors.BLUE+tcolors.BOLD}Grid information:{tcolors.ENDC}')
+        print(tabulate([
+            ['X1 grid', (yml['simulation-properties']['x1'] * u.kpc) / uv.length],
+            ['X2 grid', (yml['simulation-properties']['x2'] * u.kpc) / uv.length],
+            ['X3 grid', (yml['simulation-properties']['x3'] * u.kpc) / uv.length],
+        ]))
+
+
+    print(f'\n{tcolors.BLUE+tcolors.BOLD}definitions.h unit values:{tcolors.ENDC}')
+    print(tabulate([
+        ['UNIT_DENSITY', uv.density.to(u.g / u.cm **3).value],
+        ['UNIT_LENGTH', f'{uv.length.to(u.kpc).value}e3*CONST_pc'],
+        ['UNIT_VELOCITY', f'{uv.speed.to(u.cm / u.s).value/1e7}e7'],
+    ]))
+
+
+def nondimensionalise(value):
+    v = u.Quantity(value)
+    converted = False
+    for k, uu in uv._asdict().items():
+        if (uu.unit.is_equivalent(v)):
+            print(f'Converted input {v} to code {uu.unit.physical_type}:')
+            print((v / uu).si)
+            converted = True
+    if not converted:
+        print(f'Could not find an equivalence for {v}')
+
+def dimensionalise(value, type):
+    if type in uv._fields:
+        print(f'Converting input {value} to physical {type}:')
+        print(getattr(uv, type) * value)
+    else:
+        print(f'Could not convet {value} to physical {type}')
+
+
+def load_jet(cfile):
+    global config
+    global env
+    global jet
+    global uv
+
+    config = pk.configuration.SimulationConfiguration(cfile, None, None)
+    uv = config.get_unit_values()
+    env = config.env
+    jet = config.jet
+
+class DefaultHelpParser(argparse.ArgumentParser):
+    def error(self, message):
+        sys.stderr.write('error: %s\n' % message)
+        self.print_help()
+        sys.exit(2)
+
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('config', help='Config file, or directory containing a config.yaml file')
+    pp = argparse.ArgumentParser(add_help=False)
+    pp.add_argument('-c', '--config', help='Config file, or directory containing a config.yaml file', default='./')
+
+    parser = DefaultHelpParser(
+        description='A program for calculating jet and environment parameters',
+    )
+    subparsers = parser.add_subparsers(dest='subcommand', metavar='command')
+    subparsers.required = True
+    parser_jinfo = subparsers.add_parser('jetinfo', parents=[pp], help='Print jet and environment parameters for the given config file')
+
+    parser_dim = subparsers.add_parser('dim', parents=[pp], help='Convert a value in code units to a value in physical units')
+    parser_dim.add_argument('value', help='Value to dimensionalise', type=float)
+    parser_dim.add_argument('-u', '--unit', help='Code unit the value is in, can be one of [%(choices)s]', choices=['length', 'speed', 'energy', 'density', 'pressure', 'mass', 'time'], type=str, required=True, metavar='UNIT')
+
+    parser_nondim = subparsers.add_parser('nondim', parents=[pp], help='Convert a physical value to a value in code units')
+    parser_nondim.add_argument('value', help='Value to nondimensionalise')
+
+    parser_siminfo = subparsers.add_parser('siminfo', parents=[pp], help='Print configuration values in simulation units')
+
     args = parser.parse_args()
 
     if os.path.isdir(args.config):
@@ -80,8 +157,17 @@ def main():
     if not os.path.exists(cfile):
         print(f'Can not find config file at {cfile}')
         return 1
+    
+    load_jet(cfile)
 
-    print_jet_info(cfile)
+    if args.subcommand == 'jetinfo':
+        print_jet_info(cfile)
+    if args.subcommand == 'nondim':
+        nondimensionalise(args.value)
+    if args.subcommand == 'dim':
+        dimensionalise(args.value, args.unit)
+    if args.subcommand == 'siminfo':
+        print_sim_info(cfile)
 
 if __name__ == '__main__':
     main()
