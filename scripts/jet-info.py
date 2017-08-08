@@ -15,7 +15,7 @@ import numpy as np
 from plutokore.utilities import tcolors
 
 def print_jet_info(cfile):
-    print(f'{tcolors.HEADER}Information for {cfile}{tcolors.ENDC}')
+    print(f'{tcolors.HEADER}Information for {tcolors.BOLD}{cfile}{tcolors.ENDC}')
 
     print(f'\n{tcolors.BLUE+tcolors.BOLD}Environment:{tcolors.ENDC}')
     print(tabulate([
@@ -66,7 +66,7 @@ def print_jet_info(cfile):
     ]))
 
 def print_sim_info(cfile):
-    print(f'{tcolors.HEADER}Information for {cfile}{tcolors.ENDC}')
+    print(f'{tcolors.HEADER}Information for {tcolors.BOLD}{cfile}{tcolors.ENDC}')
     yml = config.yaml
 
     print(f'\n{tcolors.BLUE+tcolors.BOLD}Time information:{tcolors.ENDC}')
