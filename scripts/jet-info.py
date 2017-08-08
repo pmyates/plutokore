@@ -83,6 +83,12 @@ def print_sim_info(cfile):
             ['X3 grid', (yml['simulation-properties']['x3'] * u.kpc) / uv.length],
         ]))
 
+    print(f'\n{tcolors.BLUE+tcolors.BOLD}Parameter information:{tcolors.ENDC}')
+    print(tabulate([
+        ['RHO_0', (env.central_density / uv.density)],
+        ['R_SCALING', (env.scale_radius / uv.length)],
+    ]))
+
 
     print(f'\n{tcolors.BLUE+tcolors.BOLD}definitions.h unit values:{tcolors.ENDC}')
     print(tabulate([
