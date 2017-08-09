@@ -177,6 +177,9 @@ class SimulationConfiguration:
         uj = 'UNIQUE_JETS'
         dp = 'DENSITY_PROFILE'
 
+        def_mapping = {'yes': True, 'no': False}
+        inv_def_mapping = {True: 'YES', False: 'NO'}
+
         # load the files
         yaml_data = read_sim_yaml_file(self.yaml_file)
         definitions_data = read_definition_file(self.definition_file)
@@ -192,7 +195,7 @@ class SimulationConfiguration:
 
         # check unique jet matches
         if self.yaml_version >=2:
-            self.check_values(yaml_data[sp]['unique-jets'] == bool(definitions_data[uj].lower()), yaml_data[sp]['unique-jets'], bool(definitions_data[uj].lower()), 'definitions.h', 'Unique jets setting in definitions.h does not match unique jets setting in yaml')
+            self.check_values(yaml_data[sp]['unique-jets'] == def_mapping[definitions_data[uj].lower()], inv_def_mapping[yaml_data[sp]['unique-jets']], definitions_data[uj], 'definitions.h', 'Unique jets setting in definitions.h does not match unique jets setting in yaml')
 
         # check environment matches
         if self.yaml_version >=2:
@@ -293,8 +296,16 @@ class SimulationConfiguration:
         ini_data = read_ini_file(self.ini_file)
 
         total_time_yaml = yaml_data[sp]['total-time-myrs'] * u.Myr
-        total_time_sim = uv.time * ini_data[param].getfloat('simulation_time')
+        total_time = ini_data[param].getfloat('simulation_time')
+        total_time_sim = uv.time * total_time
+        tstop = ini_data['Time'].getfloat('tstop')
+        tstop_real = uv.time * tstop
+
         self.check_values(relative_error(total_time_yaml, total_time_sim) <= self.tolerance, total_time_yaml, total_time_sim, 'pluto.ini', 'Total simulation time in ini file does not match that calculated by yaml')
+
+        self.check_values(relative_error(total_time_yaml, tstop_real) <= self.tolerance, total_time_yaml, tstop_real, 'pluto.ini', 'tstop in ini file does not match that calculated yaml')
+
+        self.check_values(relative_error(tstop, total_time) <= self.tolerance, tstop, total_time, 'pluto.ini', 'tstop in ini file does not match total simulation time parameter')
 
         active_time_yaml = yaml_data[sp]['jet-active-time-myrs'] * u.Myr
         active_time_sim = uv.time * ini_data[param].getfloat('jet_active_time')
