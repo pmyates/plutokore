@@ -1,12 +1,11 @@
 from builtins import object
-import numpy as _np
-import astropy.units as _u
-import astropy.constants as _const
-import astropy.cosmology as _cosmology
-import scipy.integrate as _integrate
-
 
 class KingProfile(object):
+    import numpy as _np
+    import astropy.units as _u
+    import astropy.constants as _const
+    import astropy.cosmology as _cosmology
+    import scipy.integrate as _integrate
     def __init__(self,
                  halo_mass,
                  redshift,
