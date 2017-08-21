@@ -139,7 +139,7 @@ def submit(sdir, sname):
     import subprocess
     res = subprocess.run(['qsub', os.path.join(sdir, sname)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if res.returncode == 0:
-        print(res.stdout.decode().trim())
+        print(res.stdout.decode().strip())
         print(f'{tcolors.BLUE}{tcolors.BOLD}Job submitted{tcolors.ENDC}')
         with open(os.path.join(sdir, 'current-run'), 'wb') as f:
             f.write(res.stdout)
