@@ -620,7 +620,7 @@ class pload(object):
         OutDict.update(h5vardict)
         return OutDict
 
-    def DataScan(self, fp, n1, n2, n3, endian, dtype, off=None):
+    def DataScan(self, fp, n1, n2, n3, endian, dtype, var_index, off=None):
         """ Scans the data files in all formats. 
         
         **Inputs**:
@@ -655,9 +655,9 @@ class pload(object):
         #A = _np.fromstring(fp.read(n1_tot*n2_tot*n3_tot*8), dtype=_np.dtype(endian + dtype))
         dt = _np.dtype(endian + dtype)
         if self.mmap:
-            return _np.memmap(fp, dtype=dt, mode='c', shape=self.nshp, order='C').T
+            return _np.memmap(fp, dtype=dt, mode='c', offset=n1_tot*n2_tot*n3_tot*dt.itemsize*var_index, shape=self.nshp, order='C').T
         else:
-            A = _np.fromfile(fp, dtype=dt)
+            A = _np.fromfile(fp, dtype=dt, sep='', count=n1_tot*n2_tot*n3_tot)
 
         if (self.Slice):
             darr = _np.zeros((n1 * n2 * n3))
@@ -714,21 +714,21 @@ class pload(object):
                 if myvars[i] == 'bx1s':
                     ddict.update({
                         myvars[i]: self.DataScan(
-                            fp, n1, n2, n3, endian, dtype, off=n2 * n3)
+                            fp, n1, n2, n3, endian, dtype, var_index=i, off=n2 * n3)
                     })
                 elif myvars[i] == 'bx2s':
                     ddict.update({
                         myvars[i]: self.DataScan(
-                            fp, n1, n2, n3, endian, dtype, off=n3 * n1)
+                            fp, n1, n2, n3, endian, dtype, var_index=i, off=n3 * n1)
                     })
                 elif myvars[i] == 'bx3s':
                     ddict.update({
                         myvars[i]: self.DataScan(
-                            fp, n1, n2, n3, endian, dtype, off=n1 * n2)
+                            fp, n1, n2, n3, endian, dtype, var_index=i, off=n1 * n2)
                     })
                 else:
                     ddict.update({
-                        myvars[i]: self.DataScan(fp, n1, n2, n3, endian, dtype)
+                        myvars[i]: self.DataScan(fp, n1, n2, n3, endian, dtype, var_index=i)
                     })
 
         if not self.mmap:
@@ -766,7 +766,7 @@ class pload(object):
                 ddict.update(self.DataScanVTK(fp, n1, n2, n3, endian, dtype))
             else:
                 ddict.update({
-                    myvars[i]: self.DataScan(fp, n1, n2, n3, endian, dtype)
+                    myvars[i]: self.DataScan(fp, n1, n2, n3, endian, dtype, var_index=0)
                 })
             if not self.mmap:
                 fp.close()
