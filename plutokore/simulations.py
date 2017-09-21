@@ -52,7 +52,7 @@ def load_timestep_data(timestep, directory, suppress_output=None, mmap=False):
     with _ExitStack() as stack:
         if suppress_output in [None, True]:
             stack.enter_context(_suppress_stdout())
-            return _io.pload(timestep, w_dir=directory, mmap=mmap)
+        return _io.pload(timestep, w_dir=directory, mmap=mmap)
 
 
 def load_simulation_variables(ids, directory, var_list, suppress_output=None):
@@ -131,21 +131,27 @@ def get_gridded_data(data,
 
 
 def calculate_cell_volume(sim_data):
-    cell_volumes = _np.zeros((sim_data.n1_tot, sim_data.n2_tot))
-    if (sim_data.geometry == 'SPHERICAL'):
-        for i in range(0, cell_volumes.shape[0]):
-            r = (sim_data.x1r[i + 1]**3) - (sim_data.x1r[i]**3)
-            for j in range(0, cell_volumes.shape[1]):
-                volume = 2 * _np.pi * (
-                    _np.cos(sim_data.x2r[j]) - _np.cos(sim_data.x2r[j + 1])) * (r /
-                                                                                3)
-                cell_volumes[i, j] = volume
-    elif (sim_data.geometry == 'CARTESIAN'):
-        for i in range(0, cell_volumes.shape[0]):
-            for j in range(0, cell_volumes.shape[1]):
-                cell_volumes[i, j] = sim_data.x1r[i] * sim_data.x2r[j] * 1
-    return cell_volumes
+    return calculate_cell_volume_fast(sim_data)
+    # cell_volumes = _np.zeros((sim_data.n1_tot, sim_data.n2_tot))
+    # if (sim_data.geometry == 'SPHERICAL'):
+    #     for i in range(0, cell_volumes.shape[0]):
+    #         r = (sim_data.x1r[i + 1]**3) - (sim_data.x1r[i]**3)
+    #         for j in range(0, cell_volumes.shape[1]):
+    #             volume = 2 * _np.pi * (
+    #                 _np.cos(sim_data.x2r[j]) - _np.cos(sim_data.x2r[j + 1])) * (r /
+    #                                                                             3)
+    #             cell_volumes[i, j] = volume
+    # elif (sim_data.geometry == 'CARTESIAN'):
+    #     for i in range(0, cell_volumes.shape[0]):
+    #         for j in range(0, cell_volumes.shape[1]):
+    #             cell_volumes[i, j] = sim_data.x1r[i] * sim_data.x2r[j] * 1
+    # return cell_volumes
 
+def calculate_cell_volume_fast(sim_data):
+    if (sim_data.geometry == 'SPHERICAL'):
+        return ((2 * _np.pi) *
+                _np.outer(((sim_data.x1r[1:] ** 3 - sim_data.x1r[:-1] ** 3) / 3.0),
+                _np.cos(sim_data.x2r[:-1]) - _np.cos(sim_data.x2r[1:])))
 
 def calculate_cell_area(sim_data):
     areas = _np.zeros(sim_data.rho.shape)
