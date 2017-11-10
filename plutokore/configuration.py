@@ -467,3 +467,8 @@ def setup_path(): #pragma: no cover
 def relative_error(a,b):
     """Return the relative error between a and b"""
     return abs(a - b)/min(abs(a), abs(b))
+
+def load_simulation_info(cfile):
+    """Loads the given simulation configuration file and returns the unit values, environment values and jet values for it"""
+    conf = SimulationConfiguration(cfile, None, None)
+    return (conf.get_unit_values(), conf.env, conf.jet)
