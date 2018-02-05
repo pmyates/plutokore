@@ -8,6 +8,7 @@ from contextlib import contextmanager as _contextmanager
 from .utilities import suppress_stdout as _suppress_stdout
 import numpy as _np
 import sys as _sys
+import os as _os
 
 if _sys.version_info[0] == 2:
     from contextlib2 import ExitStack as _ExitStack
@@ -46,6 +47,13 @@ def get_tracer_count(directory):
 
 def get_tracer_count_data(sim_data):
     return len([trc for trc in sim_data.vars if 'tr' in trc])
+
+def get_times(sim_dir):
+    with open(_os.path.join(sim_dir, 'dbl.out'), 'r') as f_var:
+        tlist = []
+        for l in f_var.readlines():
+            tlist.append(float(l.split()[1]))
+        return _np.asarray(tlist)
 
 
 def load_timestep_data(timestep, directory, suppress_output=None, mmap=False):

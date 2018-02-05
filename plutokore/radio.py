@@ -191,7 +191,8 @@ def get_luminosity(
         tracer_threshold=1.0e-7,
         tracer_effective_zero=1e-10,
         radio_cell_volumes=None,
-        radio_cell_areas=None, ):
+        radio_cell_areas=None,
+        tracer_mask=None,):
     """Calculates the radio luminosity of the given simulation data,
     for the specified unit values, redshift, beam information,
     observing frequency and departure from equipartition factor"""
@@ -231,10 +232,11 @@ def get_luminosity(
     radio_luminosity = (L0 * (radio_prs_scaled / prs_scale)**(
         (q + 5.0) / 4.0) * radio_cell_volumes_physical /
                         vol_scale).to(_u.W / _u.Hz)
-    radio_luminosity_tracer_weighted = radio_luminosity * radio_tracer_mask * clamped_tracers
 
-    return radio_luminosity_tracer_weighted
+    if tracer_mask is None:
+        tracer_mask = radio_tracer_mask * clamped_tracers
 
+    return radio_luminosity * tracer_mask
 
 def get_flux_density(radio_luminosity, redshift, alpha=0.6):
     """Calculates the flux density from a given radio luminosity"""
