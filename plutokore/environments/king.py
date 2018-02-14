@@ -50,6 +50,7 @@ class KingProfile(object):
 
         if concentration_method is None:
             concentration_method = 'klypin-planck-relaxed'
+        self.concentration_method = concentration_method
 
         self.critical_density = self.calculate_critical_density(
             self.redshift, cosmo=self.cosmo)
