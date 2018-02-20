@@ -17,20 +17,37 @@ def print_jet_info(cfile):
     print(f'{tcolors.HEADER}Information for {tcolors.BOLD}{cfile}{tcolors.ENDC}')
 
     print(f'\n{tcolors.BLUE+tcolors.BOLD}Environment:{tcolors.ENDC}')
-    print(tabulate([
-        ['halo mass', f'1e{np.log10(env.halo_mass.value)}'],
-        ['redshift', env.redshift],
-        ['virial temp', env.T],
-        ['virial radius', env.virial_radius],
-        ['cosmology', env.cosmo.name],
-        ['concentration method', env.concentration_method],
-        ['concentration', env.concentration],
-        ['scale radius', env.scale_radius],
-        ['nfw parameter', env.nfw_parameter],
-        ['sound speed', env.sound_speed],
-        ['central density', env.central_density],
+    if isinstance(env, pk.MakinoProfile):
+        print(tabulate([
+            ['halo mass', f'1e{np.log10(env.halo_mass.value)}'],
+            ['redshift', env.redshift],
+            ['virial temp', env.T],
+            ['virial radius', env.virial_radius],
+            ['cosmology', env.cosmo.name],
+            ['concentration method', env.concentration_method],
+            ['concentration', env.concentration],
+            ['scale radius', env.scale_radius],
+            ['nfw parameter', env.nfw_parameter],
+            ['sound speed', env.sound_speed],
+            ['central density', env.central_density],
 
-    ]))
+        ]))
+
+    elif isinstance(env, pk.KingProfile):
+        print(tabulate([
+            ['halo mass', f'1e{np.log10(env.halo_mass.value)}'],
+            ['redshift', env.redshift],
+            ['virial temp', env.T],
+            ['virial radius', env.virial_radius],
+            ['cosmology', env.cosmo.name],
+            ['concentration method', env.concentration_method],
+            ['concentration', env.concentration],
+            ['core radius', env.core_radius],
+            ['beta', env.beta],
+            ['sound speed', env.sound_speed],
+            ['central density', env.central_density],
+
+        ]))
 
     print(f'\n{tcolors.BLUE+tcolors.BOLD}Jet:{tcolors.ENDC}')
     print(tabulate([
