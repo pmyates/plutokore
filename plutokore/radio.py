@@ -77,8 +77,9 @@ def clamp_tracers_internal(tracers,
                            tracer_effective_zero=1e-10):
 
     # smooth the tracer data with a 2d box kernel of width 3
-    box2d = _Box2DKernel(3)
-    radio_combined_tracers = _convolve(tracers, box2d, boundary='extend')
+    #box2d = _Box2DKernel(3)
+    #radio_combined_tracers = _convolve(tracers, box2d, boundary='extend')
+    radio_combined_tracers = tracers
     radio_tracer_mask = _np.where(radio_combined_tracers > tracer_threshold,
                                   1.0, tracer_effective_zero)
 
