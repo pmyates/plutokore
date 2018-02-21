@@ -31,15 +31,14 @@ def create_colorbar(im,
 
 
 def figsize(scale, ratio=None):
-    fig_width_pt = 418.25368  # Get this from LaTeX using \the\textwidth
-    inches_per_pt = 1.0 / 72.27  # Convert pt to inch
-    golden_mean = (
-        _np.sqrt(5.0) - 1.0) / 2.0  # Aesthetic ratio (you could change this)
+    fig_width_pt = 240                         # Get this from LaTeX using \the\textwidth
+    inches_per_pt = 1.0/72.27                       # Convert pt to inch
+    golden_mean = (np.sqrt(5.0)-1.0)/2.0            # Aesthetic ratio (you could change this)
     if ratio is None:
         ratio = golden_mean
-    fig_width = fig_width_pt * inches_per_pt * scale  # width in inches
-    fig_height = fig_width * ratio  # height in inches
-    fig_size = [fig_width, fig_height]
+    fig_width = fig_width_pt*inches_per_pt*scale    # width in inches
+    fig_height = fig_width*ratio # height in inches
+    fig_size = [fig_width,fig_height]
     return fig_size
 
 
@@ -50,11 +49,15 @@ def newfig(width, ratio=None):
     ax = fig.add_subplot(111)
     return fig, ax
 
-
-def savefig(filename, fig, dpi=300):  #pragma: no cover
-    fig.savefig('./Images/thesis/{}.pgf'.format(filename), dpi=dpi)
-    fig.savefig('./Images/thesis/{}.pdf'.format(filename), dpi=dpi)
-
+def savefig(filename, fig, dpi=1000, kwargs=None, png=False, eps=False):
+    if kwargs is None:
+        kwargs = {}
+    if png == True:
+        fig.savefig('{}.png'.format(filename), dpi=dpi, **kwargs)
+    else:
+        if eps:
+            fig.savefig('{}.eps'.format(filename), dpi=dpi, **kwargs)
+        fig.savefig('{}.pdf'.format(filename), dpi=dpi, **kwargs)
 
 def get_pluto_data_direct(data_object, variable, log, simulation_directory,
                           timestep):
