@@ -1,4 +1,4 @@
-#!/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import os
@@ -22,7 +22,7 @@ from astropy.table import QTable
 import pathlib
 import h5py
 
-@jit(nopython=True)
+@jit(nopython=True, cache=True)
 def raytrace_surface_brightness(r, theta, x, y, z, raytraced_values, original_values):
     phi = 0
     rmax = np.max(r)
