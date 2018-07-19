@@ -48,19 +48,19 @@ def get_tracer_count(directory):
 def get_tracer_count_data(sim_data):
     return len([trc for trc in sim_data.vars if 'tr' in trc])
 
-def get_times(sim_dir):
-    with open(_os.path.join(sim_dir, 'dbl.out'), 'r') as f_var:
+def get_times(sim_dir, time_fname='dbl.out'):
+    with open(_os.path.join(sim_dir, time_fname), 'r') as f_var:
         tlist = []
         for l in f_var.readlines():
             tlist.append(float(l.split()[1]))
         return _np.asarray(tlist)
 
 
-def load_timestep_data(timestep, directory, suppress_output=None, mmap=False):
+def load_timestep_data(timestep, directory, suppress_output=None, mmap=True, datatype='double'):
     with _ExitStack() as stack:
         if suppress_output in [None, True]:
             stack.enter_context(_suppress_stdout())
-        return _io.pload(timestep, w_dir=directory, mmap=mmap)
+        return _io.pload(timestep, w_dir=directory, mmap=mmap, datatype=datatype)
 
 
 def load_simulation_variables(ids, directory, var_list, suppress_output=None):
