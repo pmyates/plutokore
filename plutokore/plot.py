@@ -33,7 +33,7 @@ def create_colorbar(im,
 def figsize(scale, ratio=None):
     fig_width_pt = 240                         # Get this from LaTeX using \the\textwidth
     inches_per_pt = 1.0/72.27                       # Convert pt to inch
-    golden_mean = (np.sqrt(5.0)-1.0)/2.0            # Aesthetic ratio (you could change this)
+    golden_mean = (_np.sqrt(5.0)-1.0)/2.0            # Aesthetic ratio (you could change this)
     if ratio is None:
         ratio = golden_mean
     fig_width = fig_width_pt*inches_per_pt*scale    # width in inches
