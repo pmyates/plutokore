@@ -1,7 +1,7 @@
 class SimulationConfiguration:
 
     # yaml version
-    latest_yaml_version = 3
+    latest_yaml_version = 4
 
     def __init__(self, yaml_file, ini_file, definition_file):
 
@@ -50,23 +50,39 @@ class SimulationConfiguration:
 
         cosmo_options = {'planck': cosmology.Planck15, 'wmap': cosmology.WMAP9}
         profile_options = {'makino': environments.makino.MakinoProfile,
-                           'king': environments.king.KingProfile}
+                           'king': environments.king.KingProfile,
+                           'king-observational': environments.observationalking.ObservationalKingProfile}
         conc_profile_options = {'klypin-relaxed': 'klypin-planck-relaxed',
                                 'klypin-all': 'klypin-planck-all'}
 
-        cosmo = cosmo_options[env_properties['cosmology']]
         profile_creator = profile_options[env_properties['profile']]
-        conc_profile = conc_profile_options[env_properties['concentration-profile']]
-
-        mass = (10 ** env_properties['halo-mass-exponent']) * u.M_sun
         redshift = env_properties['redshift']
+        cosmo = cosmo_options[env_properties['cosmology']]
 
-        env = profile_creator(
-            mass,
-            redshift,
-            delta_vir=200,
-            cosmo=cosmo,
-            concentration_method=conc_profile)
+        if env_properties['profile'] == 'king-observational':
+            beta = env_properties['beta']
+            temp = env_properties['temp']
+            core_radius = env_properties['core-radius']
+            central_density = env_properties['central-density']
+
+            env = profile_creator(
+                redshift = redshift,
+                T = temp * u.keV,
+                beta = beta,
+                central_density = central_density * (u.g/u.cm ** 3),
+                core_radius = core_radius * u.kpc,
+                cosmo=cosmo)
+        else:
+            mass = (10 ** env_properties['halo-mass-exponent']) * u.M_sun
+            conc_profile = conc_profile_options[env_properties['concentration-profile']]
+
+            env = profile_creator(
+                mass,
+                redshift,
+                delta_vir=200,
+                cosmo=cosmo,
+                concentration_method=conc_profile)
+
         return env
 
     def load_jet(self, jet_properties, env):
@@ -198,7 +214,7 @@ class SimulationConfiguration:
             self.check_values(yaml_data[sp]['unique-jets'] == def_mapping[definitions_data[uj].lower()], inv_def_mapping[yaml_data[sp]['unique-jets']], definitions_data[uj], 'definitions.h', 'Unique jets setting in definitions.h does not match unique jets setting in yaml')
 
         # check environment matches
-        if self.yaml_version >=2:
+        if self.yaml_version >=2 and (not yaml_data['environment-properties']['profile'] == 'king-observational'):
             self.check_values(yaml_data['environment-properties']['profile'].lower() == definitions_data[dp].lower(), yaml_data['environment-properties']['profile'].lower(), definitions_data[dp].lower(), 'definitions.h', 'Profile specified in definitions.h does not match profile specified in yaml')
 
         return True
@@ -239,8 +255,8 @@ class SimulationConfiguration:
 
         for k in base_keys:
             if not self.check_values(k in data, k, data, 'config.yaml', 'Key does not exist in yaml file'): return False
-        for k in e_keys:
-            if not self.check_values(k in data['environment-properties'], k, data['environment-properties'], 'config.yaml', 'Key does not exist in yaml file'): return False
+        # for k in e_keys:
+        #     if not self.check_values(k in data['environment-properties'], k, data['environment-properties'], 'config.yaml', 'Key does not exist in yaml file'): return False
         for k in j_keys:
             if not self.check_values(k in data['jet-properties'], k, data['jet-properties'], 'config.yaml', 'Key does not exist in yaml file'): return False
         for k in s_keys:
@@ -346,8 +362,12 @@ class SimulationConfiguration:
             self.check_values(relative_error(env_data.scale_radius, ini_data[param].getfloat('r_scaling') * uv.length) <= self.tolerance, env_data.scale_radius, ini_data[param].getfloat('r_scaling') * uv.length, 'pluto.ini', 'Calculated scale/core radius does not match that given in pluto.ini')
 
         # check r_core - if this is king
-        if env == 'king':
+        if 'king' in env:
             self.check_values(relative_error(env_data.core_radius, ini_data[param].getfloat('r_scaling') * uv.length) <= self.tolerance, env_data.core_radius, ini_data[param].getfloat('r_scaling') * uv.length, 'pluto.ini', 'Calculated scale/core radius does not match that given in pluto.ini')
+
+        # check beta if this is king
+        if 'king' in env:
+            self.check_values(relative_error(env_data.beta, ini_data[param].getfloat('b_exponent')) <= self.tolerance, env_data.beta, ini_data[param].getfloat('b_exponent'), 'pluto.ini', 'Beta parameter does not match that given in pluto.ini')
 
         return True
 

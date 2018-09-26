@@ -17,7 +17,9 @@ class KingProfile(object):
                  omega_b=None,
                  gamma=None,
                  concentration_method=None,
-                 cosmo=None):
+                 cosmo=None,
+                 beta=0.38,
+                 central_density=None):
         """Creates a King profile for the given halo mass and redshift"""
 
         self.halo_mass = halo_mass
@@ -67,7 +69,7 @@ class KingProfile(object):
                                                       self.mu)
 
         # set king beta parameter from Vikhlinin+06 cluster observations
-        self.beta = 0.38
+        self.beta = beta
 
         # take 0.1 R_vir for consistency with Vikhlinin and HK13
         self.core_radius = 0.1 * self.virial_radius
@@ -79,9 +81,11 @@ class KingProfile(object):
             method=concentration_method,
             cosmo=self.cosmo)
 
-        self.central_density = self.calculate_central_density(
-            self.f_gas, self.omega_b, self.halo_mass, self.virial_radius,
-            self.beta, self.core_radius)
+        if central_density is None:
+            central_density = self.calculate_central_density(
+                self.f_gas, self.omega_b, self.halo_mass, self.virial_radius,
+                self.beta, self.core_radius)
+        self.central_density = central_density
 
     def get_density(self, r):
         return self.calculate_density_at_radius(self.central_density,
@@ -207,7 +211,7 @@ class KingProfile(object):
     @staticmethod
     def calculate_central_density(f_gas, omega_b, virial_mass, virial_radius,
                                   beta, core_radius):
-        """Calculates the central density for the NFW profile, given the hot gas fraction, baryonic matter percentage and
+        """Calculates the central density for the King profile, given the hot gas fraction, baryonic matter percentage and
         virial mass of the halo"""
         func = lambda r: 4 * _np.pi * (r**2) * _np.power(1 + ((r / core_radius.value)**2), -3.0 * beta / 2.0)
         integral = (_u.kpc**3) * _integrate.quad(func, 0, virial_radius.value)

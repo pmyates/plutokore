@@ -1,5 +1,6 @@
 from .environments.makino import MakinoProfile
 from .environments.king import KingProfile
+from .environments.observationalking import ObservationalKingProfile
 from .jet import AstroJet
 
 from . import radio

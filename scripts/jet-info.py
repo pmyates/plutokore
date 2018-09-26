@@ -49,6 +49,18 @@ def print_jet_info(cfile):
 
         ]))
 
+    elif isinstance(env, pk.ObservationalKingProfile):
+        print(tabulate([
+            ['redshift', env.redshift],
+            ['temp', env.T.to(u.Kelvin, equivalencies=u.temperature_energy())],
+            ['core radius', env.core_radius],
+            ['beta', env.beta],
+            ['central density', env.central_density],
+            ['sound speed', env.sound_speed],
+            ['cosmology', env.cosmo.name],
+
+        ]))
+
     print(f'\n{tcolors.BLUE+tcolors.BOLD}Jet:{tcolors.ENDC}')
     print(tabulate([
         ['half opening angle', np.rad2deg(jet.theta)],
@@ -102,11 +114,16 @@ def print_sim_info(cfile):
         ]))
 
     print(f'\n{tcolors.BLUE+tcolors.BOLD}Parameter information:{tcolors.ENDC}')
-    print(tabulate([
-        ['RHO_0', (env.central_density / uv.density)],
-        ['R_SCALING', (env.scale_radius / uv.length)],
-    ]))
-
+    if isinstance(env, pk.MakinoProfile):
+        print(tabulate([
+            ['RHO_0', (env.central_density / uv.density)],
+            ['R_SCALING', (env.scale_radius / uv.length)],
+        ]))
+    elif (isinstance(env, pk.KingProfile) or isinstance(env, pk.ObservationalKingProfile)):
+        print(tabulate([
+            ['RHO_0', (env.central_density / uv.density)],
+            ['R_SCALING', (env.core_radius / uv.length)],
+        ]))
 
     print(f'\n{tcolors.BLUE+tcolors.BOLD}definitions.h unit values:{tcolors.ENDC}')
     print(tabulate([

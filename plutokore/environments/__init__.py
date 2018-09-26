@@ -1,1 +1,1 @@
-__all__ = ['makino', 'king']
+__all__ = ['makino', 'king', 'observationalking']
