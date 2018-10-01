@@ -192,7 +192,6 @@ def get_luminosity(
         tracer_threshold=1.0e-7,
         tracer_effective_zero=1e-10,
         radio_cell_volumes=None,
-        radio_cell_areas=None,
         tracer_mask=None,):
     """Calculates the radio luminosity of the given simulation data,
     for the specified unit values, redshift, beam information,
@@ -206,11 +205,8 @@ def get_luminosity(
     # simulation data
     if radio_cell_volumes is None:
         radio_cell_volumes = _ps.calculate_cell_volume(simulation_data)
-    if radio_cell_areas is None:
-        radio_cell_areas = _ps.calculate_cell_area(simulation_data)
 
     # in physical units
-    radio_cell_areas_physical = radio_cell_areas * unit_values.length**2
     radio_cell_volumes_physical = radio_cell_volumes * unit_values.length**3
 
     # pressure in physical units

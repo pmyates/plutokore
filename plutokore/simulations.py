@@ -160,6 +160,8 @@ def calculate_cell_volume_fast(sim_data):
         return ((2 * _np.pi) *
                 _np.outer(((sim_data.x1r[1:] ** 3 - sim_data.x1r[:-1] ** 3) / 3.0),
                 _np.cos(sim_data.x2r[:-1]) - _np.cos(sim_data.x2r[1:])))
+    elif (sim_data.geometry == 'CARTESIAN'):
+        return sim_data.dx1 * sim_data.dx2 * sim_data.dx3
 
 def calculate_cell_area(sim_data):
     areas = _np.zeros(sim_data.rho.shape)
