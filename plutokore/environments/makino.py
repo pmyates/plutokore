@@ -28,7 +28,7 @@ class MakinoProfile(object):
         self.delta_vir = delta_vir
 
         if mu is None:
-            mu = 0.6
+            mu = 0.60364
         self.mu = mu
 
         if f_gas is None:

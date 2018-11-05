@@ -55,7 +55,6 @@ def get_times(sim_dir, time_fname='dbl.out'):
             tlist.append(float(l.split()[1]))
         return _np.asarray(tlist)
 
-
 def load_timestep_data(timestep, directory, suppress_output=None, mmap=True, datatype='double'):
     with _ExitStack() as stack:
         if suppress_output in [None, True]:

@@ -29,7 +29,7 @@ class ObservationalKingProfile(object):
         self.core_radius = core_radius
 
         if mu is None:
-            mu = 0.6
+            mu = 0.60364
         self.mu = mu
 
         if cosmo is None:

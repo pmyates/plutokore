@@ -68,7 +68,8 @@ class pload(object):
                  x1range=None,
                  x2range=None,
                  x3range=None,
-                 mmap=False):
+                 mmap=False,
+                 load_data=True):
         """Loads the data.
 	
         **Inputs**:
@@ -101,6 +102,7 @@ class pload(object):
         self.x3range = x3range
 
         self.mmap = mmap
+        self.load_data = load_data
 
         self.NStepStr = str(self.NStep)
         while len(self.NStepStr) < 4:
@@ -798,6 +800,9 @@ class pload(object):
             dataext = '.hdf5'
             nstr = num
             varfile = self.wdir + "data." + nstr + dataext
+        elif self.datatype == 'png':
+            dataext = ".png"
+            varfile = self.wdir + "png.out"
         else:
             dtype = "d"
             varfile = self.wdir + "dbl.out"
@@ -822,15 +827,16 @@ class pload(object):
              ('filetype', self.filetype)]
         ddict = dict(D)
 
-        if self.filetype == "single_file":
-            datafilename = self.wdir + "data." + nstr + dataext
-            self.ReadSingleFile(datafilename, self.vars, self.n1, self.n2,
-                                self.n3, endian, dtype, ddict)
-        elif self.filetype == "multiple_files":
-            self.ReadMultipleFiles(nstr, dataext, self.vars, self.n1, self.n2,
-                                   self.n3, endian, dtype, ddict)
-        else:
-            raise Exception(
-                'Wrong file type {0}, check pluto.ini for filetype.')
+        if self.load_data:
+            if self.filetype == "single_file":
+                datafilename = self.wdir + "data." + nstr + dataext
+                self.ReadSingleFile(datafilename, self.vars, self.n1, self.n2,
+                                    self.n3, endian, dtype, ddict)
+            elif self.filetype == "multiple_files":
+                self.ReadMultipleFiles(nstr, dataext, self.vars, self.n1, self.n2,
+                                       self.n3, endian, dtype, ddict)
+            else:
+                raise Exception(
+                    'Wrong file type {0}, check pluto.ini for filetype.')
 
         return ddict
