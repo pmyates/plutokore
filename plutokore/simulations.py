@@ -27,9 +27,9 @@ def load_simulation_data(ids, directory, suppress_output=None):
     return data
 
 
-def get_nlast_info(directory):
+def get_nlast_info(directory, datatype='double'):
     with _suppress_stdout():
-        return _io.nlast_info(w_dir=directory)
+        return _io.nlast_info(w_dir=directory, datatype=datatype)
 
 def get_last_timestep(simulation_directory):
     with _suppress_stdout():
