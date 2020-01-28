@@ -4,18 +4,20 @@ from . import jet as _jet
 from . import io as _io
 from astropy.convolution import convolve as _convolve
 from astropy.convolution import Box2DKernel as _Box2DKernel
+import astropy.units as _u
+import astropy.constants as _const
 from contextlib import contextmanager as _contextmanager
 from .utilities import suppress_stdout as _suppress_stdout
 import numpy as _np
 import sys as _sys
 import os as _os
+import h5py as _h5py
+from pathlib import Path as _Path
 
 if _sys.version_info[0] == 2:
     from contextlib2 import ExitStack as _ExitStack
 else:
     from contextlib import ExitStack as _ExitStack
-
-
 
 def load_simulation_data(ids, directory, suppress_output=None):
     data = []
@@ -264,4 +266,135 @@ def calculate_actual_jet_opening_angle(run_data, theta_deg):
     actual_angle = _np.rad2deg(run_data.x2[indicies[-1]])
     return (indicies, actual_angle)
 
+def get_hdf5_output_count(*, sim_path, data_type = 'float'):
+    """
+    Returns the last hdf5 output number, obtained from the out files.
+    
+    Parameters
+    ----------
+    sim_path : Path
+        The simulation path
+    data_type : str
+        The data type of the output file (default: 'float')
+        
+    Returns
+    -------
+    integer
+        The number of the final hdf5 output
+    """
+    
+    if data_type == 'float':
+        out_fname = 'flt.h5.out'
+    elif data_type == 'double':
+        out_fname = 'dbl.h5.out'
+    
+    with open(sim_path / out_fname, 'r') as f:
+        last_output = int(f.readlines()[-1].split()[0])
+        
+    return last_output
 
+def load_hdf5_data(*, sim_path, output, data_type = 'float'):
+    """
+    Loads the specified hdf5 data output file from the simulation directory.
+    
+
+    Parameters
+    ----------
+    sim_path : Path
+        The simulation path
+    output : int
+        The number of the output file to be loaded
+    data_type : str
+        The data type of the output file (default: 'float')
+        
+    Returns
+    -------
+    HDF5 File
+        The loaded output file
+    """
+    # Make sure we have the correct datatype
+    if data_type == 'float':
+        dext = 'flt.h5'
+    elif data_type == 'double':
+        dext = 'dbl.h5'
+        
+
+    # Load the data file
+    data_file_path = sim_path / _Path(f'data.{output:04d}.{dext}')
+    data_file = _h5py.File(data_file_path, mode = 'r')
+        
+    # Set some basic properties
+    setattr(data_file, 'output', output)
+    setattr(data_file, 'sim_time', data_file[f'Timestep_{output}'].attrs['Time'])
+    setattr(data_file, 'variable_path', f'Timestep_{output}/vars')
+    setattr(data_file, 'geometry', 'CARTESIAN')
+        
+    # Calculate the unit values
+    unit_length = 1 * _u.kpc
+    unit_density = (0.60364 * _u.u / (_u.cm ** 3)).to(_u.g / _u.cm ** 3)
+    unit_speed = _const.c
+    unit_time = (unit_length / unit_speed).to(_u.Myr)
+    unit_pressure = (unit_density * (unit_speed ** 2)).to(_u.Pa)
+    unit_mass = (unit_density * (unit_length ** 3)).to(_u.kg)
+    unit_energy = (unit_mass * (unit_length**2) / (unit_time**2)).to(_u.J)
+
+    
+    uv = UnitValues(
+    density=unit_density,
+    length=unit_length,
+    time=unit_time,
+    mass=unit_mass,
+    pressure=unit_pressure,
+    energy=unit_energy,
+    speed=unit_speed,
+    )
+    
+    # Set the unit values
+    setattr(data_file, 'unit_length', unit_length)
+    setattr(data_file, 'unit_density', unit_density)
+    setattr(data_file, 'unit_speed', unit_speed)
+    setattr(data_file, 'unit_time', unit_time)
+    setattr(data_file, 'unit_pressure', unit_pressure)
+    setattr(data_file, 'unit_mass', unit_mass)
+    setattr(data_file, 'unit_energy', unit_energy)
+    setattr(data_file, 'unit_values', uv)
+    
+    # Set the variables
+    variables = list(data_file[data_file.variable_path])
+    for v in variables:
+        setattr(data_file, v, data_file[f'{data_file.variable_path}/{v}'])
+    setattr(data_file, 'vars', variables)
+    
+    # Set the coords
+    coords = ['X', 'Y', 'Z']
+    for c in coords:
+        setattr(data_file, f'cc{c.lower()}', data_file[f'/cell_coords/{c}'])
+        setattr(data_file, f'nc{c.lower()}', data_file[f'/node_coords/{c}'])
+    
+    # Set the 1D cell midpoint cooordinate arrays
+    setattr(data_file, 'mx', data_file.ccx[0,0,:])
+    setattr(data_file, 'my', data_file.ccy[0,:,0])
+    setattr(data_file, 'mz', data_file.ccz[:,0,0])
+    
+    setattr(data_file, 'ex', data_file.ncx[0,0,:])
+    setattr(data_file, 'ey', data_file.ncy[0,:,0])
+    setattr(data_file, 'ez', data_file.ncz[:,0,0])
+    
+    setattr(data_file, 'dx', np.diff(data_file.ex))
+    setattr(data_file, 'dy', np.diff(data_file.ey))
+    setattr(data_file, 'dz', np.diff(data_file.ez))
+    
+    setattr(data_file, 'dx1', data_file.dx)
+    setattr(data_file, 'dx2', data_file.dy)
+    setattr(data_file, 'dx3', data_file.dz)
+    
+    # Set midpoint index attributes
+    setattr(data_file, 'mid_x', data_file.mx.shape[0] // 2)
+    setattr(data_file, 'mid_y', data_file.my.shape[0] // 2)
+    setattr(data_file, 'mid_z', data_file.mz.shape[0] // 2)
+    
+    # Set the tracer count
+    setattr(data_file, 'ntracers', len([t for t in variables if 'tr' in t]))
+    
+    # Return our loaded data file
+    return data_file
