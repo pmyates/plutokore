@@ -299,4 +299,45 @@ def convolve_surface_brightness(sb, unit_values, redshift, beam_FWHM_arcsec):
 
     return _convolve(sb.to(_u.Jy), beam_kernel, boundary='extend') * _u.Jy
 
+def calculate_volume_emissivity_coefficient(*, q = 2.2, gamma_c = 4.0/3.0, eta = 0.1, gamma_min = 10, gamma_max = 1e5, freq = 1 * _u.GHz, prs = 1e-11 * _u.Pa):
+    '''
+    Calculates the volume emissivity coefficient
 
+    Parameters
+    ---------
+    q : float
+        The electron energy power law index (default: 2.2, see Hardcastle & Krause 2013)
+    gamma_c : float
+        The adiabatic index (default: 4/3 for a relativistic plasma)
+    eta : float
+        The ratio between energy densities of the magnetic field and electrons (default: 0.1, see Turner, Shabala, & Krause 2018)
+    gamma_min : float
+        The minimum lorentz factor for the electron energy distribution (default: 10)
+    gamma_max : float
+        The maximum lorentz factor for the electron energy distribution (default: 10)
+    freq : float * u.GHz
+        The scale frequency (default: 1 * u.GHz)
+    prs : float * u.Pa
+        The scale pressure (default: 1 * u.Pa)
+
+    Returns
+    ------
+    j0 : float * u.W / (u.Hz * u.sr * u.m ** 3)
+        The volume emissivity coefficient in SI units
+    '''
+    log_inverse_I = -1.0 * _np.log10(get_I(q, gamma_min, gamma_max).si.value)
+    log_eta_term = ((q + 1) / 4.0) * _np.log10(eta) + (-(q + 5.0) / 4.0
+                                                       ) * _np.log10(1.0 + eta)
+    log_mu0_term = ((q + 1) / 4.0) * _np.log10(2 * _const.mu0.si.value)
+    log_nu_term = (-(q - 1) / 2.0) * _np.log10(
+        freq.si.value * (_const.m_e.si.value**3.0) * (_const.c.si.value**4.0) *
+        (1.0 / _const.e.si.value))
+    log_const_term = _np.log10(
+        get_K(q, gamma_c) *
+        ((_const.e.si.value**3.0) /
+         (_const.eps0.si.value * _const.c.si.value * _const.m_e.si.value)))
+    log_p0_term = ((q + 5.0) / 4.0) * _np.log10(prs.si.value)
+    j0 = _np.power(10, log_const_term + log_nu_term + log_mu0_term + log_inverse_I + log_eta_term + log_p0_term)
+    return j0 * (_u.W / (_u.Hz * (_u.m ** 3) * _u.sr))
+
+# def calculate_volume_emissivity(*, ):
