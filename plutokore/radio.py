@@ -448,7 +448,7 @@ def regrid_3d_sb(*,
     omega_beam = 2 * _np.pi * beam_sigma ** 2 # Area for a circular 2D gaussian
     
     z = 0.05
-    kpc_per_arcsec = _cosmo.Planck15.kpc_proper_per_arcmin(z)
+    kpc_per_arcsec = _cosmo.kpc_proper_per_arcmin(z)
     
     # Create our grid
     grid_res = pixel_size.to(_u.arcsec)
@@ -467,9 +467,9 @@ def regrid_3d_sb(*,
     # Regrid data
     # everything is in arcsec
     # save our units first, to add them back after
-    sb_units = surf_brightness.unit
+    sb_units = sb.unit
     sb_gridded = _scipy.interpolate.interpn(points = (old_z, old_x),
-                               values = surf_brightness.value,
+                               values = sb.value,
                                xi = (grid_y, grid_x),
                                method = 'linear',
                                bounds_error = False,
@@ -510,4 +510,4 @@ def change_sb_freq(*, sb, old_freq, new_freq, q = 2.2):
     freq_exp = -(q - 1) / 2
     
     # multiply original sb by new_freq / old_freq, to change scaling
-    return sb * np.power((new_freq / old_freq).to(u.dimensionless_unscaled), freq_exp)
+    return sb * _np.power((new_freq / old_freq).to(_u.dimensionless_unscaled), freq_exp)
