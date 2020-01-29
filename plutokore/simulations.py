@@ -1,6 +1,7 @@
 from __future__ import print_function
 from __future__ import absolute_import
 from . import jet as _jet
+from .jet import UnitValues
 from . import io as _io
 from astropy.convolution import convolve as _convolve
 from astropy.convolution import Box2DKernel as _Box2DKernel
@@ -13,6 +14,36 @@ import sys as _sys
 import os as _os
 import h5py as _h5py
 from pathlib import Path as _Path
+
+__all__ = [
+        'load_simulation_data',
+        'get_nlast_info',
+        'get_last_timestep',
+        'get_output_count',
+        'get_tracer_count',
+        'get_tracer_count_data',
+        'get_times',
+        'load_timestep_data',
+        'load_simulation_variables',
+        'load_simulation_times',
+        'sphericaltocartesian',
+        'get_cartesian_grid',
+        'get_gridded_data',
+        'calculate_cell_volume',
+        'calculate_cell_volume_fast',
+        'calculate_cell_area',
+        'find_last_equal_point_radial',
+        'find_last_equal_point',
+        'replace_with_initial_data',
+        'replace_with_initial_data_radial',
+        'fix_numerical_errors_single_timestep',
+        'fix_numerical_errors',
+        'combine_tracers',
+        'clamp_tracers',
+        'calculate_actual_jet_opening_angle',
+        'get_hdf5_output_count',
+        'load_hdf5_data',
+        ]
 
 if _sys.version_info[0] == 2:
     from contextlib2 import ExitStack as _ExitStack
@@ -379,9 +410,9 @@ def load_hdf5_data(*, sim_path, output, data_type = 'float'):
     setattr(data_file, 'ey', data_file.ncy[0,:,0])
     setattr(data_file, 'ez', data_file.ncz[:,0,0])
 
-    setattr(data_file, 'dx', np.diff(data_file.ex))
-    setattr(data_file, 'dy', np.diff(data_file.ey))
-    setattr(data_file, 'dz', np.diff(data_file.ez))
+    setattr(data_file, 'dx', _np.diff(data_file.ex))
+    setattr(data_file, 'dy', _np.diff(data_file.ey))
+    setattr(data_file, 'dz', _np.diff(data_file.ez))
 
     setattr(data_file, 'dx1', data_file.dx)
     setattr(data_file, 'dx2', data_file.dy)
