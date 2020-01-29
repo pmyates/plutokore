@@ -2,12 +2,14 @@ from __future__ import absolute_import
 import astropy.units as _u
 from . import simulations as _ps
 import numpy as _np
+import scipy as _scipy
 from scipy import special as _sp
 from astropy import constants as _const
 from astropy.cosmology import Planck15 as _cosmo
 from astropy.convolution import convolve as _convolve
 from astropy.convolution import Box2DKernel as _Box2DKernel
 from astropy.convolution import Gaussian2DKernel as _Gaussian2DKernel
+from scipy.integrate import trapz as _trapz
 
 
 def get_A(q):
@@ -318,7 +320,7 @@ def calculate_volume_emissivity_coefficient(*, q = 2.2, gamma_c = 4.0/3.0, eta =
     freq : float * u.GHz
         The scale frequency (default: 1 * u.GHz)
     prs : float * u.Pa
-        The scale pressure (default: 1 * u.Pa)
+        The scale pressure (default: 1e-11 * u.Pa)
 
     Returns
     ------
@@ -340,4 +342,172 @@ def calculate_volume_emissivity_coefficient(*, q = 2.2, gamma_c = 4.0/3.0, eta =
     j0 = _np.power(10, log_const_term + log_nu_term + log_mu0_term + log_inverse_I + log_eta_term + log_p0_term)
     return j0 * (_u.W / (_u.Hz * (_u.m ** 3) * _u.sr))
 
-# def calculate_volume_emissivity(*, ):
+def calculate_3d_sb(*,
+                    sim_data,
+                    gamma_max = 1e5,
+                    freq = 1.4 * _u.GHz,
+                    q = 2.2,
+                    gamma_c = 4.0/3.0,
+                    eta = 0.1,
+                    gamma_min = 10,
+                    tracer_threshold = 1e-6,
+                    small_tracer_val = 1e-20,
+                    ):
+    '''
+    Calculates the smoothed, gridded surface brightness
+
+    Parameters
+    ---------
+    sim_data : HDF5 File
+        The simulation data file
+    freq : float * u.GHz
+        The surface brightness frequency (default: 1.4 * u.GHz)
+    q : float
+        The electron energy power law index (default: 2.2, see Hardcastle & Krause 2013)
+    gamma_c : float
+        The adiabatic index (default: 4/3 for a relativistic plasma)
+    eta : float
+        The ratio between energy densities of the magnetic field and electrons (default: 0.1, see Turner, Shabala, & Krause 2018)
+    gamma_min : float
+        The minimum lorentz factor for the electron energy distribution (default: 10)
+    gamma_max : float
+        The maximum lorentz factor for the electron energy distribution (default: 10)
+    tracer_threshold : float
+        The minimum tracer threshold to classify as jet material
+    small_tracer_val : float
+        The value assigned to tracers below the threshold
+
+    Returns
+    ------
+    grid_x : u.arcsec
+        X grid in arcseconds
+    grid_y : u.arsec
+        Y grid in arcseconds
+    sb : u.mJy / u.beam
+        Surface brightness, in units of mJy per beam
+    '''
+    # calculate our emissivity coefficient
+    p0 = 1e-11 * _u.Pa
+    freq0 = 1 * _u.GHz
+    
+    pressure_exp = (q + 5) / 4
+    freq_exp = -(q - 1) / 2
+    
+    # calculate volume emissivity coefficient
+    j0 = calculate_volume_emissivity_coefficient(q = q, prs = p0, freq = freq0)
+    # calculate surface brightness coefficient
+    B0 = j0 * _np.power(freq / freq0, freq_exp) / (4 * _np.pi * _np.power(p0, pressure_exp))
+    # calculate tracer mask
+    tracer_mask = _np.where(_np.greater(sim_data.tr1, tracer_threshold), 1, small_tracer_val)
+    
+    # integrate our pressure
+    integrated_pressure_term = _trapz(y = _np.power(_np.multiply(sim_data.prs, tracer_mask), pressure_exp), x = sim_data.my * sim_data.unit_length, axis = 1)
+    integrated_pressure_term = integrated_pressure_term * _np.power(sim_data.unit_pressure, pressure_exp)
+    
+    # multiply by our B0 to get surface brightness
+    surf_brightness = B0 * integrated_pressure_term
+
+    return surf_brightness
+
+def regrid_3d_sb(*,
+                 sim_data,
+                 sb,
+                 pixel_size = 1.8 * _u.arcsec,
+                 beam_fwhm = 5 * _u.arcsec,
+                 z = 0.05,
+                 ):
+    '''
+    Grids & smooths the surface brightness, for a given redshift,
+    pixel size, and observing beam information (currently assumes observing
+    beam is a circular 2D Gaussian with constant & FWHM)
+
+    Parameters
+    ---------
+    sim_data : HDF5 File
+        The simulation data file
+    sb : u.mJy / u.beam
+        Surface brightness, in units of mJy per beam
+    pixel_size : u.arcsec
+        The gridded pixel size, in arcseconds
+    beam_fwhm : u.arcsec
+        The 2D observing beam Gaussian fwhm, in arcseconds
+    z : float
+        The redshift this sourced is observed at
+
+    Returns
+    -------
+    grid_x : u.arcsec
+        X grid in arcseconds
+    grid_y : u.arsec
+        Y grid in arcseconds
+    sb : u.mJy / u.beam
+        Gridded and smoothed surface brightness, in units of mJy per beam
+    '''
+    fwhm_to_sigma = 1 / (8 * _np.log(2)) ** 0.5
+    beam_sigma = beam_fwhm * fwhm_to_sigma
+    omega_beam = 2 * _np.pi * beam_sigma ** 2 # Area for a circular 2D gaussian
+    
+    z = 0.05
+    kpc_per_arcsec = _cosmo.Planck15.kpc_proper_per_arcmin(z)
+    
+    # Create our grid
+    grid_res = pixel_size.to(_u.arcsec)
+    x_min = (sim_data.mx[0] * sim_data.unit_length / kpc_per_arcsec).to(_u.arcsec)
+    x_max = (sim_data.mx[-1] * sim_data.unit_length / kpc_per_arcsec).to(_u.arcsec)
+    y_min = (sim_data.mz[0] * sim_data.unit_length / kpc_per_arcsec).to(_u.arcsec)
+    y_max = (sim_data.mz[-1] * sim_data.unit_length / kpc_per_arcsec).to(_u.arcsec)
+    
+    new_x = _np.arange(x_min.value, x_max.value, grid_res.value) # in arcsec now
+    new_y = _np.arange(y_min.value, y_max.value, grid_res.value) # in arcsec now
+    grid_x, grid_y = _np.meshgrid(new_x, new_y, indexing = 'xy') # in arcsec
+    
+    old_x = (sim_data.mx * sim_data.unit_length / kpc_per_arcsec).to(_u.arcsec).value # in arcsec
+    old_z = (sim_data.mz * sim_data.unit_length / kpc_per_arcsec).to(_u.arcsec).value # in arcsec
+    
+    # Regrid data
+    # everything is in arcsec
+    # save our units first, to add them back after
+    sb_units = surf_brightness.unit
+    sb_gridded = _scipy.interpolate.interpn(points = (old_z, old_x),
+                               values = surf_brightness.value,
+                               xi = (grid_y, grid_x),
+                               method = 'linear',
+                               bounds_error = False,
+                               fill_value = 0) * sb_units
+    
+    # Smooth data
+    stddev = beam_sigma / pixel_size
+    kernel = _Gaussian2DKernel(x_stddev = stddev.value)
+    sb_units = sb_gridded.unit
+    sb_smoothed = _convolve(sb_gridded.value, kernel) * sb_units
+    
+    # Convert from per sr to per beam
+    sb_final = sb_smoothed.to(_u.mJy / _u.beam, equivalencies = _u.beam_angular_area(omega_beam))
+
+    return (grid_x * _u.arcsec, grid_y * _u.arcsec, sb_final)
+
+def change_sb_freq(*, sb, old_freq, new_freq, q = 2.2):
+    '''
+    Scale a surface brightness from one frequency to another
+
+    Parameters
+    ----------
+    sb : u.mJy / u.beam
+        Surface brightness, in units of mJy per beam
+    old_freq : u.GHz
+        The current frequency of the surface brightness
+    new_freq : u.GHz
+        The desired new frequency of the surface brightness
+    q : float
+        The electron energy power law index (default: 2.2, see Hardcastle & Krause 2013)
+
+    Returns
+    -------
+    sb : u.mJy / u.beam
+        The original surface brightness scaled to the new frequency
+    '''
+    # set up our frequency exponent
+    freq_exp = -(q - 1) / 2
+    
+    # multiply original sb by new_freq / old_freq, to change scaling
+    return sb * np.power((new_freq / old_freq).to(u.dimensionless_unscaled), freq_exp)
