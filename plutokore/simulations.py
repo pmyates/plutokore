@@ -1,6 +1,7 @@
 from __future__ import print_function
 from __future__ import absolute_import
 from . import jet as _jet
+from . import configuration
 from .jet import UnitValues
 from . import io as _io
 from astropy.convolution import convolve as _convolve
@@ -69,8 +70,8 @@ def get_last_timestep(simulation_directory):
         return _io.nlast_info(w_dir=simulation_directory)['nlast']
 
 
-def get_output_count(directory):
-    return get_nlast_info(directory)['nlast']
+def get_output_count(directory, datatype = 'double'):
+    return get_nlast_info(directory, datatype)['nlast']
 
 
 def get_tracer_count(directory):
@@ -428,3 +429,29 @@ def load_hdf5_data(*, sim_path, output, data_type = 'float'):
 
     # Return our loaded data file
     return data_file
+
+def get_simulation_unit_values(*, sim_path):
+    # check if yaml config exists
+    if (sim_path / 'config.yaml').is_file():
+        # load the yaml file & return the unit values
+        uv, _, _ = configuration.load_simulation_info(sim_path / 'config.yaml')
+        return uv
+    else:
+        # assume we are talking about a simulation that uses the standard units
+        unit_length = 1 * _u.kpc
+        unit_density = (0.60364 * _u.u / (_u.cm ** 3)).to(_u.g / _u.cm ** 3)
+        unit_speed = _const.c
+        unit_time = (unit_length / unit_speed).to(_u.Myr)
+        unit_pressure = (unit_density * (unit_speed ** 2)).to(_u.Pa)
+        unit_mass = (unit_density * (unit_length ** 3)).to(_u.kg)
+        unit_energy = (unit_mass * (unit_length**2) / (unit_time**2)).to(_u.J)
+
+        return UnitValues(
+        density=unit_density,
+        length=unit_length,
+        time=unit_time,
+        mass=unit_mass,
+        pressure=unit_pressure,
+        energy=unit_energy,
+        speed=unit_speed,
+        )
