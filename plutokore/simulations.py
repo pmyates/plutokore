@@ -17,39 +17,41 @@ import h5py as _h5py
 from pathlib import Path as _Path
 
 __all__ = [
-        'load_simulation_data',
-        'get_nlast_info',
-        'get_last_timestep',
-        'get_output_count',
-        'get_tracer_count',
-        'get_tracer_count_data',
-        'get_times',
-        'load_timestep_data',
-        'load_simulation_variables',
-        'load_simulation_times',
-        'sphericaltocartesian',
-        'get_cartesian_grid',
-        'get_gridded_data',
-        'calculate_cell_volume',
-        'calculate_cell_volume_fast',
-        'calculate_cell_area',
-        'find_last_equal_point_radial',
-        'find_last_equal_point',
-        'replace_with_initial_data',
-        'replace_with_initial_data_radial',
-        'fix_numerical_errors_single_timestep',
-        'fix_numerical_errors',
-        'combine_tracers',
-        'clamp_tracers',
-        'calculate_actual_jet_opening_angle',
-        'get_hdf5_output_count',
-        'load_hdf5_data',
-        ]
+    "load_simulation_data",
+    "get_nlast_info",
+    "get_last_timestep",
+    "get_output_count",
+    "get_tracer_count",
+    "get_tracer_count_data",
+    "get_times",
+    "load_timestep_data",
+    "load_simulation_variables",
+    "load_simulation_times",
+    "sphericaltocartesian",
+    "get_cartesian_grid",
+    "get_gridded_data",
+    "calculate_cell_volume",
+    "calculate_cell_volume_fast",
+    "calculate_cell_area",
+    "find_last_equal_point_radial",
+    "find_last_equal_point",
+    "replace_with_initial_data",
+    "replace_with_initial_data_radial",
+    "fix_numerical_errors_single_timestep",
+    "fix_numerical_errors",
+    "combine_tracers",
+    "clamp_tracers",
+    "calculate_actual_jet_opening_angle",
+    "get_hdf5_output_count",
+    "load_hdf5_data",
+    "get_simulation_unit_values",
+]
 
 if _sys.version_info[0] == 2:
     from contextlib2 import ExitStack as _ExitStack
 else:
     from contextlib import ExitStack as _ExitStack
+
 
 def load_simulation_data(ids, directory, suppress_output=None):
     data = []
@@ -61,17 +63,18 @@ def load_simulation_data(ids, directory, suppress_output=None):
     return data
 
 
-def get_nlast_info(directory, datatype='double'):
+def get_nlast_info(directory, datatype="double"):
     with _suppress_stdout():
         return _io.nlast_info(w_dir=directory, datatype=datatype)
 
+
 def get_last_timestep(simulation_directory):
     with _suppress_stdout():
-        return _io.nlast_info(w_dir=simulation_directory)['nlast']
+        return _io.nlast_info(w_dir=simulation_directory)["nlast"]
 
 
-def get_output_count(directory, datatype = 'double'):
-    return get_nlast_info(directory, datatype)['nlast']
+def get_output_count(directory, datatype="double"):
+    return get_nlast_info(directory, datatype)["nlast"]
 
 
 def get_tracer_count(directory):
@@ -80,16 +83,20 @@ def get_tracer_count(directory):
 
 
 def get_tracer_count_data(sim_data):
-    return len([trc for trc in sim_data.vars if 'tr' in trc])
+    return len([trc for trc in sim_data.vars if "tr" in trc])
 
-def get_times(sim_dir, time_fname='dbl.out'):
-    with open(_os.path.join(sim_dir, time_fname), 'r') as f_var:
+
+def get_times(sim_dir, time_fname="dbl.out"):
+    with open(_os.path.join(sim_dir, time_fname), "r") as f_var:
         tlist = []
         for l in f_var.readlines():
             tlist.append(float(l.split()[1]))
         return _np.asarray(tlist)
 
-def load_timestep_data(timestep, directory, suppress_output=None, mmap=True, datatype='double'):
+
+def load_timestep_data(
+    timestep, directory, suppress_output=None, mmap=True, datatype="double"
+):
     with _ExitStack() as stack:
         if suppress_output in [None, True]:
             stack.enter_context(_suppress_stdout())
@@ -101,8 +108,7 @@ def load_simulation_variables(ids, directory, var_list, suppress_output=None):
     for v in var_list:
         data[v] = []
     for i in ids:
-        current_run_data = load_simulation_data([i], directory,
-                                              suppress_output)[0]
+        current_run_data = load_simulation_data([i], directory, suppress_output)[0]
         for v in var_list:
             data[v].append(getattr(current_run_data, v))
     return data
@@ -119,7 +125,7 @@ def load_simulation_times(run_directory, run_timesteps):
 
 def sphericaltocartesian(run_data, rotation=None):
 
-    # default rotation is pi / 2 
+    # default rotation is pi / 2
     # (results in jet pointing up for certain simulations)
     if rotation is None:
         rotation = _np.pi / 2
@@ -137,37 +143,37 @@ def sphericaltocartesian(run_data, rotation=None):
 def get_cartesian_grid(irregular_grid, x_count, y_count, min_offset=0.1):
     xmin = irregular_grid[0].min()
     ymin = irregular_grid[1].min()
-    xi = _np.linspace(xmin + min_offset, irregular_grid[0].max(),
-                      x_count)
-    yi = _np.linspace(ymin + min_offset, irregular_grid[1].max(),
-                      y_count)
+    xi = _np.linspace(xmin + min_offset, irregular_grid[0].max(), x_count)
+    yi = _np.linspace(ymin + min_offset, irregular_grid[1].max(), y_count)
     return tuple(_np.meshgrid(xi, yi))
 
 
-def get_gridded_data(data,
-                     irregular_grid,
-                     cart_grid=None,
-                     method='cubic',
-                     xcount=200,
-                     ycount=200,
-                     fill_value=0):
+def get_gridded_data(
+    data,
+    irregular_grid,
+    cart_grid=None,
+    method="cubic",
+    xcount=200,
+    ycount=200,
+    fill_value=0,
+):
     from scipy.interpolate import griddata
 
     # sort out our grid
     if cart_grid is None:
-        cart_grid = get_cartesian_grid(
-            irregular_grid, x_count=xcount, y_count=ycount)
+        cart_grid = get_cartesian_grid(irregular_grid, x_count=xcount, y_count=ycount)
     print(len(irregular_grid))
     print(len(cart_grid))
-    print('fill value is: {0}'.format(fill_value))
+    print("fill value is: {0}".format(fill_value))
     # interpolate data
     gridded_data = griddata(
         (irregular_grid[0].flatten(), irregular_grid[1].flatten()),
-        data.flatten('F'),
+        data.flatten("F"),
         cart_grid,
         method=method,
-        fill_value=fill_value)
-    #gridded_data = _np.ma.masked_invalid(gridded_data)
+        fill_value=fill_value,
+    )
+    # gridded_data = _np.ma.masked_invalid(gridded_data)
     return gridded_data, cart_grid
 
 
@@ -188,23 +194,33 @@ def calculate_cell_volume(sim_data):
     #             cell_volumes[i, j] = sim_data.x1r[i] * sim_data.x2r[j] * 1
     # return cell_volumes
 
+
 def calculate_cell_volume_fast(sim_data):
-    if (sim_data.geometry == 'SPHERICAL'):
-        return ((2 * _np.pi) *
-                _np.outer(((sim_data.x1r[1:] ** 3 - sim_data.x1r[:-1] ** 3) / 3.0),
-                _np.cos(sim_data.x2r[:-1]) - _np.cos(sim_data.x2r[1:])))
-    elif (sim_data.geometry == 'CARTESIAN'):
-        return _np.multiply.outer(_np.multiply.outer(sim_data.dx1, sim_data.dx2), sim_data.dx3)
+    if sim_data.geometry == "SPHERICAL":
+        return (2 * _np.pi) * _np.outer(
+            ((sim_data.x1r[1:] ** 3 - sim_data.x1r[:-1] ** 3) / 3.0),
+            _np.cos(sim_data.x2r[:-1]) - _np.cos(sim_data.x2r[1:]),
+        )
+    elif sim_data.geometry == "CARTESIAN":
+        return _np.multiply.outer(
+            _np.multiply.outer(sim_data.dx1, sim_data.dx2), sim_data.dx3
+        )
+
 
 def calculate_cell_area(sim_data):
     areas = _np.zeros(sim_data.rho.shape)
-    if (sim_data.geometry == 'SPHERICAL'):
+    if sim_data.geometry == "SPHERICAL":
         for i in range(0, areas.shape[0]):
-            r = (sim_data.x1r[i + 1]**2) - (sim_data.x1r[i]**2)
+            r = (sim_data.x1r[i + 1] ** 2) - (sim_data.x1r[i] ** 2)
             for j in range(0, areas.shape[1]):
-                areas[i, j] = sim_data.x1[i]**2 * _np.sin(sim_data.x2[
-                    j]) * sim_data.dx2[j] * _np.pi * 2
-    elif (sim_data.geometry == 'CARTESIAN'):
+                areas[i, j] = (
+                    sim_data.x1[i] ** 2
+                    * _np.sin(sim_data.x2[j])
+                    * sim_data.dx2[j]
+                    * _np.pi
+                    * 2
+                )
+    elif sim_data.geometry == "CARTESIAN":
         for i in range(0, areas.shape[0]):
             for j in range(0, areas.shape[1]):
                 areas[i, j] = sim_data.x1r[i] * sim_data.x2r[j]
@@ -246,8 +262,9 @@ def replace_with_initial_data_radial(initial_data, new_data, epsilon=1e-5):
     # replace with intial data from this point onwards
     ret = _np.copy(new_data)
     for t_index in range(new_data.shape[1]):
-        ret[last_index[t_index]:, t_index] = initial_data[last_index[t_index]:,
-                                                          t_index]
+        ret[last_index[t_index] :, t_index] = initial_data[
+            last_index[t_index] :, t_index
+        ]
 
     return ret
 
@@ -261,35 +278,35 @@ def fix_numerical_errors_single_timestep(run_data, initial_data, var_list):
 
 def fix_numerical_errors(run_data, initial_data, var_list):
     for t_step in range(len(run_data)):
-        fix_numerical_errors_single_timestep(run_data[t_step], initial_data,
-                                             var_list)
+        fix_numerical_errors_single_timestep(run_data[t_step], initial_data, var_list)
 
 
 def combine_tracers(simulation_data, ntracers):
     """Helper function to combine multiple tracers into one array. Simply adds them up"""
     ret = _np.zeros_like(simulation_data.tr1)
     for i in range(ntracers):
-        ret = ret + getattr(simulation_data, 'tr{0}'.format(i + 1))
+        ret = ret + getattr(simulation_data, "tr{0}".format(i + 1))
     return ret
 
 
-def clamp_tracers(simulation_data,
-                  ntracers,
-                  tracer_threshold=1e-7,
-                  tracer_effective_zero=1e-20):
+def clamp_tracers(
+    simulation_data, ntracers, tracer_threshold=1e-7, tracer_effective_zero=1e-20
+):
     # smooth the tracer data with a 2d box kernel of width 3
     box2d = _Box2DKernel(3)
     radio_combined_tracers = _convolve(
-        combine_tracers(simulation_data, ntracers), box2d, boundary='extend')
-    radio_tracer_mask = _np.where(radio_combined_tracers > tracer_threshold,
-                                  1.0, tracer_effective_zero)
+        combine_tracers(simulation_data, ntracers), box2d, boundary="extend"
+    )
+    radio_tracer_mask = _np.where(
+        radio_combined_tracers > tracer_threshold, 1.0, tracer_effective_zero
+    )
 
     # create new tracer array that is clamped to tracer values
     clamped_tracers = radio_combined_tracers.copy()
-    clamped_tracers[clamped_tracers <=
-                    tracer_threshold] = tracer_effective_zero
+    clamped_tracers[clamped_tracers <= tracer_threshold] = tracer_effective_zero
 
     return (radio_tracer_mask, clamped_tracers, radio_combined_tracers)
+
 
 def calculate_actual_jet_opening_angle(run_data, theta_deg):
     indicies = _np.where(run_data.x2 < _np.deg2rad(theta_deg))[0]
@@ -298,7 +315,8 @@ def calculate_actual_jet_opening_angle(run_data, theta_deg):
     actual_angle = _np.rad2deg(run_data.x2[indicies[-1]])
     return (indicies, actual_angle)
 
-def get_hdf5_output_count(*, sim_path, data_type = 'float'):
+
+def get_hdf5_output_count(*, sim_path, data_type="float"):
     """
     Returns the last hdf5 output number, obtained from the out files.
 
@@ -315,17 +333,18 @@ def get_hdf5_output_count(*, sim_path, data_type = 'float'):
         The number of the final hdf5 output
     """
 
-    if data_type == 'float':
-        out_fname = 'flt.h5.out'
-    elif data_type == 'double':
-        out_fname = 'dbl.h5.out'
+    if data_type == "float":
+        out_fname = "flt.h5.out"
+    elif data_type == "double":
+        out_fname = "dbl.h5.out"
 
-    with open(sim_path / out_fname, 'r') as f:
+    with open(sim_path / out_fname, "r") as f:
         last_output = int(f.readlines()[-1].split()[0])
 
     return last_output
 
-def load_hdf5_data(*, sim_path, output, data_type = 'float'):
+
+def load_hdf5_data(*, sim_path, output, data_type="float"):
     """
     Loads the specified hdf5 data output file from the simulation directory.
 
@@ -345,21 +364,20 @@ def load_hdf5_data(*, sim_path, output, data_type = 'float'):
         The loaded output file
     """
     # Make sure we have the correct datatype
-    if data_type == 'float':
-        dext = 'flt.h5'
-    elif data_type == 'double':
-        dext = 'dbl.h5'
-
+    if data_type == "float":
+        dext = "flt.h5"
+    elif data_type == "double":
+        dext = "dbl.h5"
 
     # Load the data file
-    data_file_path = sim_path / _Path(f'data.{output:04d}.{dext}')
-    data_file = _h5py.File(data_file_path, mode = 'r')
+    data_file_path = sim_path / _Path(f"data.{output:04d}.{dext}")
+    data_file = _h5py.File(data_file_path, mode="r")
 
     # Set some basic properties
-    setattr(data_file, 'output', output)
-    setattr(data_file, 'sim_time', data_file[f'Timestep_{output}'].attrs['Time'])
-    setattr(data_file, 'variable_path', f'Timestep_{output}/vars')
-    setattr(data_file, 'geometry', 'CARTESIAN')
+    setattr(data_file, "output", output)
+    setattr(data_file, "sim_time", data_file[f"Timestep_{output}"].attrs["Time"])
+    setattr(data_file, "variable_path", f"Timestep_{output}/vars")
+    setattr(data_file, "geometry", "CARTESIAN")
 
     # Calculate the unit values
     unit_length = 1 * _u.kpc
@@ -368,73 +386,74 @@ def load_hdf5_data(*, sim_path, output, data_type = 'float'):
     unit_time = (unit_length / unit_speed).to(_u.Myr)
     unit_pressure = (unit_density * (unit_speed ** 2)).to(_u.Pa)
     unit_mass = (unit_density * (unit_length ** 3)).to(_u.kg)
-    unit_energy = (unit_mass * (unit_length**2) / (unit_time**2)).to(_u.J)
+    unit_energy = (unit_mass * (unit_length ** 2) / (unit_time ** 2)).to(_u.J)
 
     uv = UnitValues(
-    density=unit_density,
-    length=unit_length,
-    time=unit_time,
-    mass=unit_mass,
-    pressure=unit_pressure,
-    energy=unit_energy,
-    speed=unit_speed,
+        density=unit_density,
+        length=unit_length,
+        time=unit_time,
+        mass=unit_mass,
+        pressure=unit_pressure,
+        energy=unit_energy,
+        speed=unit_speed,
     )
 
     # Set the unit values
-    setattr(data_file, 'unit_length', unit_length)
-    setattr(data_file, 'unit_density', unit_density)
-    setattr(data_file, 'unit_speed', unit_speed)
-    setattr(data_file, 'unit_time', unit_time)
-    setattr(data_file, 'unit_pressure', unit_pressure)
-    setattr(data_file, 'unit_mass', unit_mass)
-    setattr(data_file, 'unit_energy', unit_energy)
-    setattr(data_file, 'unit_values', uv)
+    setattr(data_file, "unit_length", unit_length)
+    setattr(data_file, "unit_density", unit_density)
+    setattr(data_file, "unit_speed", unit_speed)
+    setattr(data_file, "unit_time", unit_time)
+    setattr(data_file, "unit_pressure", unit_pressure)
+    setattr(data_file, "unit_mass", unit_mass)
+    setattr(data_file, "unit_energy", unit_energy)
+    setattr(data_file, "unit_values", uv)
 
     # Set the variables
     variables = list(data_file[data_file.variable_path])
     for v in variables:
-        setattr(data_file, v, data_file[f'{data_file.variable_path}/{v}'])
-    setattr(data_file, 'vars', variables)
+        setattr(data_file, v, data_file[f"{data_file.variable_path}/{v}"])
+    setattr(data_file, "vars", variables)
 
     # Set the coords
-    coords = ['X', 'Y', 'Z']
+    coords = ["X", "Y", "Z"]
     for c in coords:
-        setattr(data_file, f'cc{c.lower()}', data_file[f'/cell_coords/{c}'])
-        setattr(data_file, f'nc{c.lower()}', data_file[f'/node_coords/{c}'])
+        setattr(data_file, f"cc{c.lower()}", data_file[f"/cell_coords/{c}"])
+        setattr(data_file, f"nc{c.lower()}", data_file[f"/node_coords/{c}"])
 
     # Set the 1D cell midpoint cooordinate arrays
-    setattr(data_file, 'mx', data_file.ccx[0,0,:])
-    setattr(data_file, 'my', data_file.ccy[0,:,0])
-    setattr(data_file, 'mz', data_file.ccz[:,0,0])
+    setattr(data_file, "mx", data_file.ccx[0, 0, :])
+    setattr(data_file, "my", data_file.ccy[0, :, 0])
+    setattr(data_file, "mz", data_file.ccz[:, 0, 0])
 
-    setattr(data_file, 'ex', data_file.ncx[0,0,:])
-    setattr(data_file, 'ey', data_file.ncy[0,:,0])
-    setattr(data_file, 'ez', data_file.ncz[:,0,0])
+    setattr(data_file, "ex", data_file.ncx[0, 0, :])
+    setattr(data_file, "ey", data_file.ncy[0, :, 0])
+    setattr(data_file, "ez", data_file.ncz[:, 0, 0])
 
-    setattr(data_file, 'dx', _np.diff(data_file.ex))
-    setattr(data_file, 'dy', _np.diff(data_file.ey))
-    setattr(data_file, 'dz', _np.diff(data_file.ez))
+    setattr(data_file, "dx", _np.diff(data_file.ex))
+    setattr(data_file, "dy", _np.diff(data_file.ey))
+    setattr(data_file, "dz", _np.diff(data_file.ez))
 
-    setattr(data_file, 'dx1', data_file.dx)
-    setattr(data_file, 'dx2', data_file.dy)
-    setattr(data_file, 'dx3', data_file.dz)
+    setattr(data_file, "dx1", data_file.dx)
+    setattr(data_file, "dx2", data_file.dy)
+    setattr(data_file, "dx3", data_file.dz)
 
     # Set midpoint index attributes
-    setattr(data_file, 'mid_x', data_file.mx.shape[0] // 2)
-    setattr(data_file, 'mid_y', data_file.my.shape[0] // 2)
-    setattr(data_file, 'mid_z', data_file.mz.shape[0] // 2)
+    setattr(data_file, "mid_x", data_file.mx.shape[0] // 2)
+    setattr(data_file, "mid_y", data_file.my.shape[0] // 2)
+    setattr(data_file, "mid_z", data_file.mz.shape[0] // 2)
 
     # Set the tracer count
-    setattr(data_file, 'ntracers', len([t for t in variables if 'tr' in t]))
+    setattr(data_file, "ntracers", len([t for t in variables if "tr" in t]))
 
     # Return our loaded data file
     return data_file
 
+
 def get_simulation_unit_values(*, sim_path):
     # check if yaml config exists
-    if (sim_path / 'config.yaml').is_file():
+    if (sim_path / "config.yaml").is_file():
         # load the yaml file & return the unit values
-        uv, _, _ = configuration.load_simulation_info(sim_path / 'config.yaml')
+        uv, _, _ = configuration.load_simulation_info(sim_path / "config.yaml")
         return uv
     else:
         # assume we are talking about a simulation that uses the standard units
@@ -444,14 +463,14 @@ def get_simulation_unit_values(*, sim_path):
         unit_time = (unit_length / unit_speed).to(_u.Myr)
         unit_pressure = (unit_density * (unit_speed ** 2)).to(_u.Pa)
         unit_mass = (unit_density * (unit_length ** 3)).to(_u.kg)
-        unit_energy = (unit_mass * (unit_length**2) / (unit_time**2)).to(_u.J)
+        unit_energy = (unit_mass * (unit_length ** 2) / (unit_time ** 2)).to(_u.J)
 
         return UnitValues(
-        density=unit_density,
-        length=unit_length,
-        time=unit_time,
-        mass=unit_mass,
-        pressure=unit_pressure,
-        energy=unit_energy,
-        speed=unit_speed,
+            density=unit_density,
+            length=unit_length,
+            time=unit_time,
+            mass=unit_mass,
+            pressure=unit_pressure,
+            energy=unit_energy,
+            speed=unit_speed,
         )
